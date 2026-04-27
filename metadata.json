@@ -1,5 +1,5 @@
 {
-  "name": "Sales & OTIF Dashboard",
+  "name": "UDL Sales & OTIF Dashboard",
   "description": "A comprehensive sales and OTIF (On-Time In-Full) analytics dashboard for manufacturing plants, featuring Excel/CSV upload and real-time visualization.",
   "requestFramePermissions": [],
   "majorCapabilities": [

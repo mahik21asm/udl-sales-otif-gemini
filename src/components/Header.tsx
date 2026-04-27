@@ -38,6 +38,7 @@ interface HeaderProps {
   dateBounds: { min: string; max: string };
   lastUpdated: string | null;
   onResetFilters: () => void;
+  onClearData: () => void;
   darkMode: boolean;
   toggleDarkMode: () => void;
   user: User | null;
@@ -58,6 +59,7 @@ const Header: React.FC<HeaderProps> = ({
   dateBounds,
   lastUpdated,
   onResetFilters,
+  onClearData,
   darkMode,
   toggleDarkMode,
   user
@@ -94,10 +96,10 @@ const Header: React.FC<HeaderProps> = ({
         </div>
         <div>
           <h1 className="text-lg font-extrabold text-primary-text dark:text-primary-text-dark tracking-tight flex items-center gap-2">
-            DataStream Pro
+            UDL Sales & OTIF Dashboard
             <span className={cn(
               "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-              isLiveData ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+              isLiveData ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-primary-accent/10 text-primary-accent dark:bg-primary-accent-dark/30 dark:text-primary-accent-dark"
             )}>
               {isLiveData ? "Live" : "Sample"}
             </span>
@@ -133,7 +135,7 @@ const Header: React.FC<HeaderProps> = ({
           <select 
             value={invType} 
             onChange={(e) => setInvType(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+            className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium"
           >
             <option value="ALL">All Types</option>
             <option value="Domestic Invoice">Domestic</option>
@@ -147,7 +149,7 @@ const Header: React.FC<HeaderProps> = ({
           <select 
             value={segment} 
             onChange={(e) => setSegment(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium min-w-[140px]"
+            className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium min-w-[140px]"
           >
             <option value="ALL">All Segments</option>
             {segments.map(s => <option key={s} value={s}>{s}</option>)}
@@ -158,7 +160,7 @@ const Header: React.FC<HeaderProps> = ({
           <select 
             value={customer} 
             onChange={(e) => setCustomer(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium max-w-[150px]"
+            className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium max-w-[150px]"
           >
             <option value="ALL">All Customers</option>
             {customers.map(c => <option key={c} value={c}>{c.substring(0, 30)}{c.length > 30 ? '...' : ''}</option>)}
@@ -169,7 +171,7 @@ const Header: React.FC<HeaderProps> = ({
           <select 
             value={accMgr} 
             onChange={(e) => setAccMgr(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium max-w-[150px]"
+            className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium max-w-[150px]"
           >
             <option value="ALL">All AMs</option>
             {accMgrs.map(am => <option key={am} value={am}>{am}</option>)}
@@ -182,7 +184,7 @@ const Header: React.FC<HeaderProps> = ({
               type="date" 
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" 
+              className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium" 
             />
           </FilterGroup>
           <FilterGroup label="To">
@@ -190,7 +192,7 @@ const Header: React.FC<HeaderProps> = ({
               type="date" 
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium" 
+              className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium" 
             />
           </FilterGroup>
         </div>
@@ -198,7 +200,7 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-700 pl-5">
           <button
             onClick={onResetFilters}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all border border-transparent hover:border-indigo-100 dark:hover:border-indigo-900/30"
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-secondary-text dark:text-secondary-text-dark hover:text-primary-accent dark:hover:text-primary-accent-dark hover:bg-primary-accent/10 dark:hover:bg-primary-accent-dark/20 rounded-lg transition-all border border-transparent hover:border-primary-accent/20 dark:hover:border-primary-accent-dark/30"
             title="Clear all filters"
           >
             <RotateCcw size={14} />
@@ -207,7 +209,7 @@ const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={toggleDarkMode}
-            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 transition-all shadow-sm"
+            className="p-2 rounded-lg bg-page-bg dark:bg-slate-800 text-secondary-text dark:text-secondary-text-dark hover:bg-primary-accent hover:text-white dark:hover:bg-primary-accent-dark transition-all shadow-sm"
             title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
             {darkMode ? <Sun size={16} /> : <Moon size={16} />}
@@ -216,11 +218,14 @@ const Header: React.FC<HeaderProps> = ({
           {user ? (
             <div className="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-800">
               <div className="flex flex-col items-end">
-                <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight">{user.displayName || 'Cloud User'}</span>
-                <button onClick={handleLogout} className="text-[9px] font-bold text-rose-500 uppercase hover:underline">Logout</button>
+                <span className="text-[10px] font-black text-primary-text dark:text-primary-text-dark uppercase tracking-tight">{user.displayName || 'Cloud User'}</span>
+                <div className="flex gap-2">
+                  <button onClick={onClearData} className="text-[9px] font-bold text-slate-400 hover:text-danger uppercase transition-colors">Clear DB</button>
+                  <button onClick={handleLogout} className="text-[9px] font-bold text-danger uppercase hover:underline">Logout</button>
+                </div>
               </div>
-              <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center overflow-hidden">
-                {user.photoURL ? <img src={user.photoURL} alt="User" /> : <UserIcon size={14} className="text-indigo-600 dark:text-indigo-400" />}
+              <div className="w-8 h-8 rounded-full bg-primary-accent/10 dark:bg-primary-accent/20 border border-primary-accent/20 dark:border-primary-accent/30 flex items-center justify-center overflow-hidden">
+                {user.photoURL ? <img src={user.photoURL} alt="User" /> : <UserIcon size={14} className="text-primary-accent dark:text-primary-accent-dark" />}
               </div>
             </div>
           ) : (

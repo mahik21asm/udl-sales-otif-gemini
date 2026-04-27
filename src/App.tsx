@@ -14,13 +14,13 @@ import { auth, subscribeToSales, saveSalesBatch, clearSalesRecords } from './lib
 import { onAuthStateChanged, User } from 'firebase/auth';
 
 export default function App() {
-  const [records, setRecords] = useState<SalesRecord[]>(SAMPLE_RAW);
+  const [records, setRecords] = useState<SalesRecord[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLiveData, setIsLiveData] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{ type: 'neutral' | 'success' | 'error', message: string }>({
     type: 'neutral',
-    message: 'Loaded: Sample Sales Register Data · Apr 2026'
+    message: 'Welcome: UDL Sales Dashboard. Upload data or log in to view cloud records.'
   });
 
   // Filters State
@@ -54,7 +54,7 @@ export default function App() {
       if (u) {
         setIsLoading(true);
         unsubscribeSales = subscribeToSales((dbRecords) => {
-          if (dbRecords.length > 0) {
+          if (dbRecords && dbRecords.length > 0) {
             setRecords(dbRecords);
             setIsLiveData(true);
             setUploadStatus({
@@ -62,29 +62,25 @@ export default function App() {
               message: `✅ Sync Active: ${dbRecords.length.toLocaleString()} records in cloud`
             });
           } else {
-            // If DB is empty, we stay on sample or clear?
-            // User might have cleared records, so fallback to sample
-            setRecords(SAMPLE_RAW);
+            // Logged in but cloud is empty
+            setRecords([]);
             setIsLiveData(false);
             setUploadStatus({
               type: 'neutral',
-              message: 'Cloud Database is empty. Showing Sample Data.'
+              message: 'Cloud Storage is empty. Please upload an Excel/CSV file to begin.'
             });
           }
           setIsLoading(false);
         });
       } else {
-        // Logged out
+        // Logged out - show sample data as demo
         setIsLoading(false);
-        // We keep local records if any, or go back to sample if they were live
-        if (isLiveData) {
-          setRecords(SAMPLE_RAW);
-          setIsLiveData(false);
-          setUploadStatus({
-            type: 'neutral',
-            message: 'Logged out. Returned to Sample Data.'
-          });
-        }
+        setRecords(SAMPLE_RAW);
+        setIsLiveData(false);
+        setUploadStatus({
+          type: 'neutral',
+          message: 'Demo Mode: Showing Sample Sales Data. Login to use private cloud storage.'
+        });
       }
     });
 
@@ -138,11 +134,13 @@ export default function App() {
 
     if (user) {
       try {
-        setUploadStatus({ type: 'neutral', message: '⏳ Persisting data to cloud...' });
+        setUploadStatus({ type: 'neutral', message: '⏳ Replacing cloud storage data...' });
+        // Ensure replace behavior instead of append to prevent data "adding up"
+        await clearSalesRecords();
         await saveSalesBatch(newRecords);
         setUploadStatus({
           type: 'success',
-          message: `✅ Saved to Cloud — ${newRecords.length.toLocaleString()} rows aggregated`
+          message: `✅ Dashboard Updated — ${newRecords.length.toLocaleString()} records replaced in cloud`
         });
       } catch (err: any) {
         console.error("Firebase Save Error:", err);
@@ -180,6 +178,21 @@ export default function App() {
     handleResetFilters();
   };
 
+  const handleClearData = async () => {
+    const confirms = window.confirm("Are you sure you want to permanently delete ALL sales records from the cloud database? This cannot be undone.");
+    if (confirms) {
+      try {
+        setUploadStatus({ type: 'loading', message: 'Purging cloud database...' });
+        await clearSalesRecords();
+        setRecords([]);
+        setUploadStatus({ type: 'success', message: '✅ Database cleared successfully.' });
+      } catch (err) {
+        setUploadStatus({ type: 'error', message: 'Failed to clear database.' });
+        console.error(err);
+      }
+    }
+  };
+
   const handleResetFilters = () => {
     setPlant('ALL');
     setInvType('ALL');
@@ -214,6 +227,7 @@ export default function App() {
         dateBounds={dateBounds}
         lastUpdated={lastUpdated}
         onResetFilters={handleResetFilters}
+        onClearData={handleClearData}
         darkMode={darkMode}
         toggleDarkMode={toggleDarkMode}
         user={user}
@@ -283,7 +297,7 @@ export default function App() {
       </main>
 
       <footer className="text-center py-10 text-slate-400 dark:text-slate-500 text-[10px] uppercase font-black tracking-[0.2em] border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 opacity-60 italic transition-colors duration-300">
-        UDL Manufacturing Intelligence &nbsp;•&nbsp; INFA & INFB Hub &nbsp;•&nbsp; © 2026 DataStream Pro
+        UDL Manufacturing Intelligence &nbsp;•&nbsp; INFA & INFB Hub &nbsp;•&nbsp; © 2026 UDL Group
       </footer>
     </div>
   );

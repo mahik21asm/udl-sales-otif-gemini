@@ -1,0 +1,41 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Sales Record Validation
+    function isValidSalesRecord(data) {
+      return data.keys().hasAll(['plant', 'customer', 'salesLacs', 'billingDate']) &&
+             data.plant is string && data.plant.size() <= 10 &&
+             data.customer is string && data.customer.size() <= 200 &&
+             data.salesLacs is number &&
+             data.billingDate is string && data.billingDate.matches('^\\d{4}-\\d{2}-\\d{2}$') &&
+             (data.keys().size() <= 15);
+    }
+
+    match /sales_records/{recordId} {
+      allow read: if isSignedIn();
+      allow create: if isEmailVerified() && isValidId(recordId) && isValidSalesRecord(request.resource.data);
+      allow delete: if isEmailVerified(); // Allow clearing data
+      // Updates not typically needed for a dump, but let's allow for corrections
+      allow update: if isEmailVerified() && isValidId(recordId) && isValidSalesRecord(request.resource.data);
+    }
+  }
+}

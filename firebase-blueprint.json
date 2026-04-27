@@ -1,0 +1,33 @@
+{
+  "entities": {
+    "SalesRecord": {
+      "title": "Sales Record",
+      "description": "A single sales transaction record from the manufacturing plant.",
+      "type": "object",
+      "properties": {
+        "plant": { "type": "string", "description": "Plant identifier (INFA/INFB)" },
+        "customer": { "type": "string", "description": "Customer name (Sold-to party)" },
+        "segment": { "type": "string", "description": "Business segment" },
+        "invoiceType": { "type": "string", "description": "Type of invoice" },
+        "salesLacs": { "type": "number", "description": "Sales value in Lacs" },
+        "quantity": { "type": "number", "description": "Quantity sold" },
+        "onTime": { "type": "number", "description": "On-time delivery count" },
+        "failure": { "type": "number", "description": "Failure delivery count" },
+        "productType": { "type": "string", "description": "Production vs NPD" },
+        "orderType": { "type": "string", "description": "SCH/PO/IU" },
+        "billingDate": { "type": "string", "format": "date", "description": "Date of billing (YYYY-MM-DD)" },
+        "material": { "type": "string", "description": "Material description" },
+        "accountManager": { "type": "string", "description": "Assigned Account Manager" },
+        "uploadedAt": { "type": "string", "format": "date-time", "description": "When this record was uploaded" },
+        "batchId": { "type": "string", "description": "Identifier for the upload batch" }
+      },
+      "required": ["plant", "customer", "salesLacs", "billingDate"]
+    }
+  },
+  "firestore": {
+    "sales_records/{recordId}": {
+      "schema": "SalesRecord",
+      "description": "Collection of all sales records."
+    }
+  }
+}

@@ -5,7 +5,8 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY as string,
 });
 
-export const getGeminiResponse = async (prompt: string, records: SalesRecord[]) => {
+export const getGeminiResponse = async (prompt: string, records: SalesRecord[] = []) => {
+  if (!records) records = [];
   // Create a summary context of the data to feed into Gemini
   // We don't want to send thousands of rows, but we can send aggregated statistics or a sample
   const totalSales = records.reduce((acc, curr) => acc + (curr.salesLacs || 0), 0);

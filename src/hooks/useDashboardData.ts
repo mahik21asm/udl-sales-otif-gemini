@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { SalesRecord, AggregatedData, DayData } from '../types';
 
 export function useDashboardData(
-  records: SalesRecord[],
+  records: SalesRecord[] = [],
   filters: {
     plant: string;
     invType: string;
@@ -14,6 +14,7 @@ export function useDashboardData(
   }
 ) {
   const filtered = useMemo(() => {
+    if (!records) return [];
     return records.filter(r => {
       const matchPlant = filters.plant === 'ALL' || r.plant === filters.plant;
       const matchInv = filters.invType === 'ALL' || r.invoiceType === filters.invType;
@@ -90,6 +91,7 @@ export function useDashboardData(
   const chartData = useMemo(() => {
     // Daily
     const dailyMap: Record<string, DayData & { ts: number }> = {};
+    if (!filtered) return { days: [], segmentData: { labels: [], data: [] }, accMgrData: { labels: [], data: [] }, paretoData: { labels: [], datasets: [] }, invData: { labels: [], data: [] }, prodNpdData: { labels: [], datasets: [] }, schPoData: { labels: [], datasets: [] }, topCustData: { labels: [], data: [] }, topMatData: { labels: [], data: [] }, splitData: { labels: [], data: [] } };
     
     // Find absolute date range in filtered data
     let minTs = Infinity;
@@ -226,7 +228,10 @@ export function useDashboardData(
 
     // Top 10 Customers
     const custSales: Record<string, number> = {};
-    filtered.forEach(r => custSales[r.customer] = (custSales[r.customer] || 0) + r.salesLacs);
+    filtered.forEach(r => {
+      const c = r.customer || 'Unknown';
+      custSales[c] = (custSales[c] || 0) + r.salesLacs;
+    });
     const topCusts = Object.entries(custSales).sort((a, b) => b[1] - a[1]).slice(0, 10);
     const topCustData = { labels: topCusts.map(i => i[0]), data: topCusts.map(i => i[1]) };
 

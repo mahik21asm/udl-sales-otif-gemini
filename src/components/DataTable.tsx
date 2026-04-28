@@ -61,7 +61,10 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
       case 'Export Invoice': return 'EXP';
       case 'STO Invoice(Proforma)': return 'STO';
       case 'Ret. Ord. Credit memo': return 'CR';
-      default: return type.substring(0, 3).toUpperCase();
+      default: {
+        const label = String(type || '');
+        return label.substring(0, 3).toUpperCase();
+      }
     }
   };
 

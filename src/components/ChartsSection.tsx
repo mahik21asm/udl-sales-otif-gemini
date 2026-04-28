@@ -362,7 +362,10 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           <div key={`cust-${renderKey}`} className="h-full">
             <Bar 
               data={{
-              labels: topCustData.labels.map(l => l.substring(0, 25) + (l.length > 25 ? '...' : '')),
+              labels: topCustData.labels.map(l => {
+                const label = String(l || '');
+                return label.substring(0, 25) + (label.length > 25 ? '...' : '');
+              }),
               datasets: [{
                 data: topCustData.data,
                 backgroundColor: ['#a5b4fccc', '#93c5fdcc', '#6ee7b7cc', '#fcd34dcc', '#fda4afcc', '#d8b4fecc', '#67e8f9cc', '#fb923ccc', '#f9a8d4cc', '#99f6e4cc'],
@@ -397,7 +400,10 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           <div key={`mat-${renderKey}`} className="h-full">
             <Bar 
               data={{
-              labels: topMatData.labels.map(l => l.substring(0, 25) + (l.length > 25 ? '...' : '')),
+              labels: topMatData.labels.map(l => {
+                const label = String(l || '');
+                return label.substring(0, 25) + (label.length > 25 ? '...' : '');
+              }),
               datasets: [{
                 data: topMatData.data,
                 backgroundColor: ['#a5b4fccc', '#fcd34dcc', '#6ee7b7cc', '#fda4afcc', '#d8b4fecc', '#67e8f9cc', '#fb923ccc', '#f9a8d4cc', '#99f6e4cc', '#c7d2fecc'],

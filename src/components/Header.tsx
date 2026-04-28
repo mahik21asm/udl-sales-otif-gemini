@@ -1,9 +1,8 @@
 import React from 'react';
 import { cn } from '../lib/utils';
-import { RotateCcw, Moon, Sun, LogIn, User as UserIcon, LogOut, Settings } from 'lucide-react';
+import { RotateCcw, Moon, Sun, LogIn, User as UserIcon, LogOut } from 'lucide-react';
 import { loginWithGoogle, auth } from '../lib/firebase';
 import { User, signOut } from 'firebase/auth';
-import { M365SettingsModal } from './M365SettingsModal';
 
 interface FilterGroupProps {
   label: string;
@@ -65,8 +64,6 @@ const Header: React.FC<HeaderProps> = ({
   toggleDarkMode,
   user
 }) => {
-  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
-
   const handlePrint = () => {
     window.print();
   };
@@ -155,7 +152,7 @@ const Header: React.FC<HeaderProps> = ({
             className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium min-w-[140px]"
           >
             <option value="ALL">All Segments</option>
-            {segments.map(s => <option key={s} value={s}>{s}</option>)}
+            {(segments || []).map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </FilterGroup>
 
@@ -166,7 +163,14 @@ const Header: React.FC<HeaderProps> = ({
             className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium max-w-[150px]"
           >
             <option value="ALL">All Customers</option>
-            {customers.map(c => <option key={c} value={c}>{c.substring(0, 30)}{c.length > 30 ? '...' : ''}</option>)}
+            {(customers || []).map(c => {
+              const label = String(c || '');
+              return (
+                <option key={c} value={c}>
+                  {label.substring(0, 30)}{label.length > 30 ? '...' : ''}
+                </option>
+              );
+            })}
           </select>
         </FilterGroup>
 
@@ -177,7 +181,7 @@ const Header: React.FC<HeaderProps> = ({
             className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium max-w-[150px]"
           >
             <option value="ALL">All AMs</option>
-            {accMgrs.map(am => <option key={am} value={am}>{am}</option>)}
+            {(accMgrs || []).map(am => <option key={am} value={am}>{am}</option>)}
           </select>
         </FilterGroup>
 
@@ -218,14 +222,6 @@ const Header: React.FC<HeaderProps> = ({
             {darkMode ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
-          <button
-            onClick={() => setIsSettingsOpen(true)}
-            className="p-2 rounded-lg bg-page-bg dark:bg-slate-800 text-secondary-text dark:text-secondary-text-dark hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-            title="Email & Automation Settings"
-          >
-            <Settings size={16} />
-          </button>
-
           {user ? (
             <div className="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-800">
               <div className="flex flex-col items-end">
@@ -250,7 +246,6 @@ const Header: React.FC<HeaderProps> = ({
           )}
         </div>
       </div>
-      <M365SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 };

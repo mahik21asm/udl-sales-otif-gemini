@@ -103,11 +103,11 @@ export default function App() {
   const toggleDarkMode = () => setDarkMode(!darkMode);
 
   // Derived filter options
-  const segments = useMemo(() => [...new Set(records.map(r => r.segment))].filter(Boolean).sort(), [records]);
-  const customers = useMemo(() => [...new Set(records.map(r => r.customer))].filter(Boolean).sort(), [records]);
-  const accMgrs = useMemo(() => [...new Set(records.map(r => r.accountManager))].filter(Boolean).sort(), [records]);
+  const segments = useMemo(() => [...new Set((records || []).map(r => r.segment))].filter(Boolean).sort(), [records]);
+  const customers = useMemo(() => [...new Set((records || []).map(r => r.customer))].filter(Boolean).sort(), [records]);
+  const accMgrs = useMemo(() => [...new Set((records || []).map(r => r.accountManager))].filter(Boolean).sort(), [records]);
   const dateBounds = useMemo(() => {
-    const dates = records.map(r => r.billingDate).filter(Boolean).sort();
+    const dates = (records || []).map(r => r.billingDate).filter(Boolean).sort();
     return {
       min: dates[0] || '',
       max: dates[dates.length - 1] || ''
@@ -289,7 +289,7 @@ export default function App() {
               plantFilter={plant}
               darkMode={darkMode}
               onDrillDown={handleChartDrillDown}
-              renderKey={records.length}
+              renderKey={(records || []).length}
             />
 
             <DataTable data={aggregatedTableData} />

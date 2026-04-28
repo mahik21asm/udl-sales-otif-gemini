@@ -1,8 +1,9 @@
 import React from 'react';
 import { cn } from '../lib/utils';
-import { RotateCcw, Moon, Sun, LogIn, User as UserIcon, LogOut } from 'lucide-react';
+import { RotateCcw, Moon, Sun, LogIn, User as UserIcon, LogOut, Settings } from 'lucide-react';
 import { loginWithGoogle, auth } from '../lib/firebase';
 import { User, signOut } from 'firebase/auth';
+import { M365SettingsModal } from './M365SettingsModal';
 
 interface FilterGroupProps {
   label: string;
@@ -64,6 +65,8 @@ const Header: React.FC<HeaderProps> = ({
   toggleDarkMode,
   user
 }) => {
+  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
+
   const handlePrint = () => {
     window.print();
   };
@@ -215,6 +218,14 @@ const Header: React.FC<HeaderProps> = ({
             {darkMode ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="p-2 rounded-lg bg-page-bg dark:bg-slate-800 text-secondary-text dark:text-secondary-text-dark hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+            title="Email & Automation Settings"
+          >
+            <Settings size={16} />
+          </button>
+
           {user ? (
             <div className="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-800">
               <div className="flex flex-col items-end">
@@ -239,6 +250,7 @@ const Header: React.FC<HeaderProps> = ({
           )}
         </div>
       </div>
+      <M365SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 };

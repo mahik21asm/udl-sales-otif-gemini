@@ -6,6 +6,7 @@ import OTIFPanel from './components/OTIFPanel';
 import ChartsSection from './components/ChartsSection';
 import AIInsightsPanel from './components/AIInsightsPanel';
 import DataTable from './components/DataTable';
+import { GeminiChat } from './components/GeminiChat';
 import { SAMPLE_RAW } from './lib/sampleData';
 import { useDashboardData } from './hooks/useDashboardData';
 import { SalesRecord } from './types';
@@ -299,6 +300,7 @@ export default function App() {
       <footer className="text-center py-10 text-slate-400 dark:text-slate-500 text-[10px] uppercase font-black tracking-[0.2em] border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 opacity-60 italic transition-colors duration-300">
         UDL Manufacturing Intelligence &nbsp;•&nbsp; INFA & INFB Hub &nbsp;•&nbsp; © 2026 UDL Group
       </footer>
+      <GeminiChat records={records} />
     </div>
   );
 }

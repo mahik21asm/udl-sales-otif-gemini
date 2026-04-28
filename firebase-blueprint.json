@@ -22,12 +22,26 @@
         "batchId": { "type": "string", "description": "Identifier for the upload batch" }
       },
       "required": ["plant", "customer", "salesLacs", "billingDate"]
+    },
+    "AppSettings": {
+      "title": "Application Settings",
+      "description": "Global or user-specific settings including third-party integrations.",
+      "type": "object",
+      "properties": {
+        "m365RefreshToken": { "type": "string", "description": "Microsoft 365 OAuth Refresh Token" },
+        "connected": { "type": "boolean", "description": "Is M365 connected" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "firestore": {
     "sales_records/{recordId}": {
       "schema": "SalesRecord",
       "description": "Collection of all sales records."
+    },
+    "settings/{settingId}": {
+      "schema": "AppSettings",
+      "description": "Global application configuration documents."
     }
   }
 }

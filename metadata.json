@@ -1,6 +1,6 @@
 {
-  "name": "UDL Sales & OTIF Dashboard",
-  "description": "A comprehensive sales and OTIF (On-Time In-Full) analytics dashboard for manufacturing plants, featuring Excel/CSV upload and real-time visualization.",
+  "name": "UDL Intelligent Analytics Platform",
+  "description": "Full-stack sales & OTIF intelligence dashboard for INFA/INFB manufacturing clusters. Features real-time sync, AI insights, and multi-user cloud storage.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "data_visualization",

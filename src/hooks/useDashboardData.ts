@@ -130,22 +130,48 @@ export function useDashboardData(
     });
 
     if (minTs !== Infinity) {
-      // Create continuous timeline from min to max
+      // Create continuous timeline from min to max using UTC to avoid timezone shifts
       const curr = new Date(minTs);
+      curr.setUTCHours(0, 0, 0, 0);
+      
       const end = new Date(maxTs);
-      while (curr <= end) {
-        const dk = curr.toISOString().split('T')[0];
-        // For display we'll still want the pretty date
-        const displayDate = curr.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).replace(' ', '-');
+      end.setUTCHours(23, 59, 59, 999); // Set to very end of the day
+
+      // Safe limit to prevent infinite loops if something goes wrong with dates
+      let safetyCount = 0;
+      while (curr <= end && safetyCount < 366) {
+        // Manual key generation to avoid UTC shift
+        const y = curr.getFullYear();
+        const m = String(curr.getMonth() + 1).padStart(2, '0');
+        const d = String(curr.getDate()).padStart(2, '0');
+        const dk = `${y}-${m}-${d}`;
+        
+        const day = String(curr.getDate()).padStart(2, '0');
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const month = months[curr.getMonth()];
+        const displayDate = `${day}-${month}`;
+        
         if (!dailyMap[dk]) dailyMap[dk] = { d: displayDate, infa: 0, infb: 0, ts: curr.getTime() };
+        
         curr.setDate(curr.getDate() + 1);
+        safetyCount++;
       }
     }
 
     filtered.forEach(r => {
-      const d = new Date(r.billingDate);
-      if (isNaN(d.getTime())) return;
-      const dk = r.billingDate.split('T')[0]; // billingDate is already YYYY-MM-DD
+      const dk = r.billingDate; // Use string directly to avoid timezone shifts
+      if (!dk) return;
+      if (!dailyMap[dk]) {
+        // If we haven't found this date in our range loop (odd case), add it
+        const d = new Date(dk);
+        if (!isNaN(d.getTime())) {
+          const day = String(d.getDate()).padStart(2, '0');
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const month = months[d.getMonth()];
+          dailyMap[dk] = { d: `${day}-${month}`, infa: 0, infb: 0, ts: d.getTime() };
+        }
+      }
+      
       if (dailyMap[dk]) {
         if (r.plant === 'INFA') dailyMap[dk].infa += r.salesLacs;
         else dailyMap[dk].infb += r.salesLacs;

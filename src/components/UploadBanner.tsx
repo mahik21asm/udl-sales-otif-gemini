@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { Upload, RefreshCw, AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Upload, RefreshCw, AlertCircle, CheckCircle2, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { motion, AnimatePresence } from 'motion/react';
 import * as XLSX from 'xlsx';
 import { SalesRecord } from '../types';
 import { validateSalesData, ValidationError } from '../services/dataValidator';
@@ -16,6 +17,7 @@ const UploadBanner: React.FC<UploadBannerProps> = ({ onDataLoaded, onReset, stat
   const [isDragging, setIsDragging] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [isErrorListExpanded, setIsErrorListExpanded] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const handleFile = (file: File) => {
     if (!file) return;
@@ -66,149 +68,210 @@ const UploadBanner: React.FC<UploadBannerProps> = ({ onDataLoaded, onReset, stat
   };
 
   return (
-    <div className="bg-card-bg dark:bg-card-bg-dark border-b border-slate-200 dark:border-slate-800 px-8 py-12 flex flex-col items-center text-center transition-colors duration-300">
-      <div className="max-w-3xl w-full">
-        <h2 className="text-3xl font-extrabold text-primary-text dark:text-primary-text-dark mb-2 tracking-tight">Import Data Dump</h2>
-        <p className="text-secondary-text dark:text-secondary-text-dark mb-6 font-medium italic">Upload your SAP/ERP data dump (XLSX, XLS, CSV). We'll automatically map the columns to the dashboard.</p>
-        <div className="mt-8 mb-4 grid grid-cols-2 md:grid-cols-3 gap-3 text-left">
-          {[
-            { label: 'Plant/Unit', desc: 'INFA or INFB' },
-            { label: 'Customer', desc: 'Sold-to party' },
-            { label: 'Sales Value', desc: 'In Lacs (₹)' },
-            { label: 'OTIF Data', desc: 'On-time vs Failure' },
-            { label: 'Billing Date', desc: 'DD-MM-YYYY' },
-            { label: 'Segment', desc: 'Business unit' }
-          ].map(r => (
-            <div key={r.label} className="bg-page-bg dark:bg-slate-800/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-              <div className="text-[9px] font-black text-primary-accent dark:text-primary-accent-dark uppercase tracking-widest mb-1">{r.label}</div>
-              <div className="text-[11px] text-secondary-text dark:text-secondary-text-dark font-bold">{r.desc}</div>
-            </div>
-          ))}
-        </div>
-        
-        <div 
-          onClick={() => fileInputRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-          onDragLeave={() => setIsDragging(false)}
-          onDrop={onDrop}
-          className={cn(
-            "group flex flex-col items-center justify-center border-2 border-dashed rounded-3xl py-12 px-6 cursor-pointer transition-all w-full",
-            isDragging 
-              ? "bg-primary-accent-dark/10 dark:bg-primary-accent-dark/20 border-primary-accent-dark ring-8 ring-primary-accent-dark/5 shadow-inner" 
-              : "bg-page-bg dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-primary-accent hover:bg-white dark:hover:bg-slate-800 hover:shadow-xl hover:shadow-primary-accent/5 shadow-sm"
-          )}
+    <div id="upload-banner" className={cn(
+      "bg-card-bg dark:bg-card-bg-dark border-b border-slate-200 dark:border-slate-800 transition-all duration-500 relative overflow-hidden",
+      isMinimized ? "py-4 px-8" : "px-8 py-10"
+    )}>
+      {/* Background Decorative Element */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-primary-accent/5 blur-[100px] pointer-events-none" />
+      
+      {/* Minimize Toggle */}
+      <div className="absolute top-4 right-6 z-20">
+        <button
+          onClick={() => setIsMinimized(!isMinimized)}
+          className="flex items-center gap-2 px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 hover:text-primary-accent dark:hover:text-primary-accent-dark transition-all border border-slate-100 dark:border-slate-800 hover:border-primary-accent rounded-lg bg-white dark:bg-slate-900 shadow-sm"
         >
-          <div className={cn(
-            "w-20 h-20 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-md border border-slate-100 dark:border-slate-700 mb-6 transition-all group-hover:scale-110 group-hover:rotate-3",
-            isDragging ? "scale-110 rotate-3 border-indigo-200 dark:border-indigo-800" : ""
-          )}>
-            <Upload size={36} strokeWidth={2.5} />
-          </div>
-          
-          <div className="text-center mb-8">
-            <h3 className="text-xl font-bold text-primary-text dark:text-primary-text-dark mb-2">Drag and drop files here</h3>
-            <p className="text-secondary-text dark:text-secondary-text-dark text-sm font-medium">Supported formats: .XLSX, .XLS, .CSV (Max 250MB)</p>
-          </div>
+          {isMinimized ? (
+            <><RefreshCw size={12} className="animate-spin-slow" /> EXPAND_CONSOLE</>
+          ) : (
+            <><EyeOff size={12} /> COLLAPSE_INTERFACE</>
+          )}
+        </button>
+      </div>
 
-          <button 
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              fileInputRef.current?.click();
-            }}
-            className="bg-primary-accent text-white px-10 py-3.5 rounded-xl font-bold text-base shadow-lg shadow-primary-accent/20 dark:shadow-none hover:opacity-90 hover:translate-y-[-1px] active:translate-y-[1px] transition-all"
+      <AnimatePresence mode="wait">
+        {isMinimized ? (
+          <motion.div 
+            key="minimized"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            className="flex items-center justify-between w-full max-w-7xl mx-auto relative z-10"
           >
-            Select Sales File
-          </button>
-          
-          <input 
-            ref={fileInputRef}
-            type="file" 
-            accept=".xlsx,.xls,.csv" 
-            className="hidden" 
-            onChange={(e) => handleFile(e.target.files?.[0] as File)} 
-          />
-        </div>
-
-        {/* Validation Errors Feedback */}
-        {validationErrors.length > 0 && (
-          <div className="mt-8 w-full bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
-            <div 
-              className="px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-rose-100/50 dark:hover:bg-rose-900/30 transition-colors"
-              onClick={() => setIsErrorListExpanded(!isErrorListExpanded)}
-            >
-              <div className="flex items-center gap-3">
-                <AlertCircle className="text-rose-600 dark:text-rose-400" size={20} />
-                <span className="font-bold text-rose-800 dark:text-rose-300">
-                  Data Validation Failed — {validationErrors.length} issues identified
-                </span>
+            <div className="flex items-center gap-5">
+              <div className="w-10 h-10 rounded-xl bg-slate-900 dark:bg-primary-accent flex items-center justify-center text-white shadow-lg shadow-primary-accent/10">
+                <Upload size={18} />
               </div>
-              {isErrorListExpanded ? <ChevronUp size={18} className="text-rose-400" /> : <ChevronDown size={18} className="text-rose-400" />}
-            </div>
-            
-            {isErrorListExpanded && (
-              <div className="px-6 pb-6 text-left border-t border-rose-100 dark:border-rose-900/30">
-                <ul className="mt-4 space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                  {validationErrors.map((err, i) => (
-                    <li key={i} className="text-sm py-2 border-b border-rose-100/50 dark:border-rose-900/10 last:border-0 flex gap-3">
-                      <span className="font-black text-[10px] bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded h-fit mt-0.5">
-                        {err.row ? `ROW ${err.row}` : 'HDR'}
-                      </span>
-                      <div>
-                        <p className="text-rose-900 dark:text-rose-200 font-bold leading-tight">
-                          {err.column ? `${err.column}: ` : ''}{err.message}
-                        </p>
-                        {err.value !== undefined && (
-                          <p className="text-[11px] text-rose-500 dark:text-rose-400 mt-0.5 italic">
-                            Found value: "{String(err.value)}"
-                          </p>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-4 flex items-center gap-2 text-rose-600 dark:text-rose-400 text-xs italic font-medium">
-                  <AlertCircle size={14} />
-                  Please correct these errors in your source file and try again.
+              <div className="text-left">
+                <h2 className="text-xs font-black text-slate-900 dark:text-white tracking-widest uppercase mb-0.5">Control Console Minimized</h2>
+                <div className="flex items-center gap-2">
+                  <div className={cn("w-1.5 h-1.5 rounded-full", status.type === 'success' ? 'bg-success animate-pulse' : 'bg-primary-accent')} />
+                  <p className="text-[10px] text-slate-400 font-mono italic tracking-tight">{status.message}</p>
                 </div>
               </div>
-            )}
-          </div>
-        )}
-
-        <div className="mt-12 pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-wrap justify-between gap-10 items-start text-left">
-          <div className="flex-1 min-w-[200px]">
-            <div className="text-[10px] font-black text-secondary-text dark:text-secondary-text-dark uppercase tracking-widest mb-2 opacity-80 italic">Data Validation</div>
-            <p className="text-[12px] text-secondary-text dark:text-secondary-text-dark leading-relaxed font-semibold">Automatic schema detection and type checking active for INFA/INFB manufacturing datasets.</p>
-          </div>
-          <div className="flex-1 min-w-[200px]">
-            <div className="text-[10px] font-black text-secondary-text dark:text-secondary-text-dark uppercase tracking-widest mb-2 opacity-80 italic">Status Summary</div>
-            <div className="flex items-center gap-2.5 mt-1.5">
-               <div className={cn("w-2.5 h-2.5 rounded-full", 
-                status.type === 'success' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.7)]" : 
-                status.type === 'error' ? "bg-danger shadow-[0_0_12px_rgba(220,53,69,0.7)]" : 
-                status.type === 'loading' ? "bg-primary-accent animate-pulse shadow-[0_0_12px_rgba(37,99,235,0.7)]" :
-                validationErrors.length > 0 ? "bg-danger" : "bg-slate-400"
-              )} />
-              <span className={cn("text-[13px] font-extrabold tracking-tight", 
-                status.type === 'success' ? "text-emerald-700 dark:text-emerald-400" : 
-                status.type === 'error' || validationErrors.length > 0 ? "text-danger dark:text-rose-400" : 
-                status.type === 'loading' ? "text-primary-accent dark:text-primary-accent-dark" :
-                "text-secondary-text dark:text-secondary-text-dark"
-              )}>
-                {validationErrors.length > 0 ? "Validation Failed" : status.message}
-              </span>
             </div>
-            <button 
-              onClick={handleResetWorkspace}
-              className="mt-4 flex items-center gap-2 text-[10px] font-black text-primary-accent dark:text-primary-accent-dark uppercase tracking-widest hover:opacity-80 transition-all border-b border-primary-accent/20 dark:border-primary-accent/50 pb-0.5"
-            >
-              <RefreshCw size={10} />
-              Reset Workspace
-            </button>
-          </div>
-        </div>
-      </div>
+
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={handleResetWorkspace}
+                className="px-4 py-1.5 text-[10px] font-bold text-slate-400 hover:text-danger hover:bg-danger/10 rounded-lg transition-all border border-transparent hover:border-danger/20 uppercase tracking-widest"
+              >
+                SCRUB_ENVIRONMENT
+              </button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="expanded"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="max-w-4xl w-full mx-auto relative z-10"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+              <div className="lg:col-span-7 space-y-6">
+                <div>
+                  <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 tracking-tighter">DATA_INGESTION_PORTAL</h2>
+                  <p className="text-slate-500 dark:text-slate-400 font-mono text-[11px] leading-relaxed uppercase tracking-wide opacity-80">
+                    Connect legacy SAP/ERP data exports directly to the intelligence layer. Supporting ISO-8601 clusters INFA and INFB.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    { label: 'Plant Identifier', value: 'INFA / INFB' },
+                    { label: 'Column Context', value: 'Auto-Mapped' },
+                    { label: 'Validation Layer', value: 'Strict Type_Check' },
+                    { label: 'Sync Status', value: 'Cloud_Enabled' }
+                  ].map(r => (
+                    <div key={r.label} className="border-l border-slate-200 dark:border-slate-800 pl-4 py-1">
+                      <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">{r.label}</div>
+                      <div className="text-[11px] text-slate-900 dark:text-white font-mono font-bold italic uppercase">{r.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-4 flex gap-4">
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest shadow-xl shadow-slate-900/5 transition-all hover:translate-y-[-1px] active:translate-y-[1px]"
+                  >
+                    Select_Payload
+                  </button>
+                   <button 
+                    onClick={handleResetWorkspace}
+                    className="px-6 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest text-slate-400 border border-slate-100 dark:border-slate-800 hover:text-danger hover:border-danger hover:bg-danger/5 transition-all"
+                  >
+                    Scrub_All
+                  </button>
+                </div>
+              </div>
+
+              <div className="lg:col-span-5">
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={onDrop}
+                  className={cn(
+                    "flex flex-col items-center justify-center border-2 border-dashed rounded-3xl p-10 cursor-pointer transition-all aspect-square",
+                    isDragging 
+                      ? "bg-primary-accent/5 border-primary-accent scale-[1.02] shadow-2xl" 
+                      : "bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 hover:border-primary-accent hover:bg-white dark:hover:bg-slate-900/80 transition-all group"
+                  )}
+                >
+                  <div className={cn(
+                    "w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 shadow-sm border border-slate-100 dark:border-slate-700 mb-6 transition-all group-hover:scale-110 group-hover:text-primary-accent group-hover:rotate-6",
+                    isDragging ? "scale-110 rotate-6 text-primary-accent border-primary-accent/30" : ""
+                  )}>
+                    <Upload size={32} />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-2">Drag_Drop_File</p>
+                    <p className="text-[9px] text-slate-400 dark:text-slate-500 font-mono italic">XLSX, XLS, CSV | AUTO_PARSE</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              accept=".xlsx,.xls,.csv" 
+              className="hidden" 
+              onChange={(e) => handleFile(e.target.files?.[0] as File)} 
+            />
+
+            {/* Validation Errors Feedback */}
+            {validationErrors.length > 0 && (
+              <div className="mt-8 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
+                <div 
+                  className="px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-rose-100/50 dark:hover:bg-rose-900/30 transition-colors"
+                  onClick={() => setIsErrorListExpanded(!isErrorListExpanded)}
+                >
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="text-rose-600 dark:text-rose-400" size={20} />
+                    <span className="font-bold text-rose-800 dark:text-rose-300">
+                      Data Validation Failed — {validationErrors.length} issues identified
+                    </span>
+                  </div>
+                  {isErrorListExpanded ? <ChevronUp size={18} className="text-rose-400" /> : <ChevronDown size={18} className="text-rose-400" />}
+                </div>
+                
+                {isErrorListExpanded && (
+                  <div className="px-6 pb-6 text-left border-t border-rose-100 dark:border-rose-900/30">
+                    <ul className="mt-4 space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                      {validationErrors.map((err, i) => (
+                        <li key={i} className="text-sm py-2 border-b border-rose-100/50 dark:border-rose-900/10 last:border-0 flex gap-3">
+                          <span className="font-black text-[10px] bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded h-fit mt-0.5">
+                            {err.row ? `ROW ${err.row}` : 'HDR'}
+                          </span>
+                          <div>
+                            <p className="text-rose-900 dark:text-rose-200 font-bold leading-tight">
+                              {err.column ? `${err.column}: ` : ''}{err.message}
+                            </p>
+                            {err.value !== undefined && (
+                              <p className="text-[11px] text-rose-500 dark:text-rose-400 mt-0.5 italic">
+                                Found value: "{String(err.value)}"
+                              </p>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="mt-12 pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-wrap justify-between gap-10 items-start text-left w-full">
+              <div className="flex-1 min-w-[200px]">
+                <div className="text-[10px] font-black text-secondary-text dark:text-secondary-text-dark uppercase tracking-widest mb-2 opacity-80 italic">Data Validation</div>
+                <p className="text-[12px] text-secondary-text dark:text-secondary-text-dark leading-relaxed font-semibold">Automatic schema detection and type checking active for INFA/INFB manufacturing datasets.</p>
+              </div>
+              <div className="flex-1 min-w-[200px]">
+                <div className="text-[10px] font-black text-secondary-text dark:text-secondary-text-dark uppercase tracking-widest mb-2 opacity-80 italic">Status Summary</div>
+                <div className="flex items-center gap-2.5 mt-1.5">
+                  <div className={cn("w-2.5 h-2.5 rounded-full", 
+                    status.type === 'success' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.7)]" : 
+                    status.type === 'error' ? "bg-danger shadow-[0_0_12px_rgba(220,53,69,0.7)]" : 
+                    status.type === 'loading' ? "bg-primary-accent animate-pulse shadow-[0_0_12px_rgba(37,99,235,0.7)]" :
+                    validationErrors.length > 0 ? "bg-danger" : "bg-slate-400"
+                  )} />
+                  <span className={cn("text-[13px] font-extrabold tracking-tight", 
+                    status.type === 'success' ? "text-emerald-700 dark:text-emerald-400" : 
+                    status.type === 'error' || validationErrors.length > 0 ? "text-danger dark:text-rose-400" : 
+                    status.type === 'loading' ? "text-primary-accent dark:text-primary-accent-dark" :
+                    "text-secondary-text dark:text-secondary-text-dark"
+                  )}>
+                    {validationErrors.length > 0 ? "Validation Failed" : status.message}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

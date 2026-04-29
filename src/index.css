@@ -1,31 +1,32 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&family=Libre+Baskerville:ital@1&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-serif: "Libre Baskerville", serif;
   
-  --color-page-bg: #f4f6f9;
-  --color-page-bg-dark: #121212;
+  --color-page-bg: #f8fafc;
+  --color-page-bg-dark: #0f172a;
   
   --color-card-bg: #ffffff;
-  --color-card-bg-dark: #1e1e1e;
+  --color-card-bg-dark: #1e293b;
 
-  --color-sidebar-bg: #343a40;
-  --color-sidebar-bg-dark: #0d1117;
+  --color-sidebar-bg: #1e293b;
+  --color-sidebar-bg-dark: #020617;
 
-  --color-primary-text: #212529;
-  --color-primary-text-dark: #e1e1e1;
+  --color-primary-text: #0f172a;
+  --color-primary-text-dark: #f8fafc;
 
-  --color-secondary-text: #6c757d;
-  --color-secondary-text-dark: #8b949e;
+  --color-secondary-text: #64748b;
+  --color-secondary-text-dark: #94a3b8;
 
-  --color-primary-accent: #0d6efd;
-  --color-primary-accent-dark: #58a6ff;
+  --color-primary-accent: #2563eb;
+  --color-primary-accent-dark: #38bdf8;
 
-  --color-success: #198754;
-  --color-warning: #ffc107;
-  --color-danger: #dc3545;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
 }
 
 body {
@@ -34,4 +35,37 @@ body {
 
 .dark body {
   @apply bg-page-bg-dark text-primary-text-dark;
+}
+
+/* Technical Scrollbar */
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-200 dark:bg-slate-800 rounded-full hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors;
+  }
+
+  /* Matrix Pattern Helper */
+  .bg-matrix {
+    background-image: radial-gradient(circle, currentColor 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.05;
+  }
+}
+
+/* Animations */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

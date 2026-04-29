@@ -18,6 +18,7 @@ import {
 import { Chart, Doughnut, Bar } from 'react-chartjs-2';
 import { DayData } from '../types';
 import { cn } from '../lib/utils';
+import { Maximize2 } from 'lucide-react';
 
 ChartJS.register(
   CategoryScale,
@@ -48,7 +49,9 @@ interface ChartsSectionProps {
   splitData: { labels: string[]; data: number[] };
   plantFilter: string;
   darkMode: boolean;
+  isLiveData: boolean;
   onDrillDown: (type: string, value: string) => void;
+  onMaximize?: (content: { title: string, subtitle: string, children: React.ReactNode }) => void;
   renderKey: string | number;
 }
 
@@ -65,7 +68,9 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
   splitData,
   plantFilter,
   darkMode,
+  isLiveData,
   onDrillDown,
+  onMaximize,
   renderKey
 }) => {
   const textColor = darkMode ? '#8b949e' : '#6c757d'; // Use secondary text for axis/ticks
@@ -78,7 +83,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
     acc.push(Number((prev + current).toFixed(2)));
     return acc;
   }, []);
-
+  
   const dailyDatasets = [];
   if (plantFilter !== 'INFB') {
     dailyDatasets.push({
@@ -144,7 +149,27 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
         backgroundColor: '#1e293b',
         padding: 10,
         cornerRadius: 8,
-        callbacks: { label: (c: any) => `${c.dataset.label}: ₹${c.parsed.y?.toFixed(2)}L` } 
+        callbacks: { 
+          label: (c: any) => {
+            const value = c.parsed.y || 0;
+            const label = c.dataset.label || '';
+            
+            // Calculate total for this specific X-axis index across all stacked bars
+            let dayTotal = 0;
+            c.chart.data.datasets.forEach((ds: any) => {
+              if (ds.type === 'bar') {
+                dayTotal += ds.data[c.dataIndex] || 0;
+              }
+            });
+
+            if (c.dataset.type === 'line') {
+              return `${label}: ₹${value.toFixed(2)}L`;
+            }
+            
+            const pct = dayTotal > 0 ? ((value / dayTotal) * 100).toFixed(1) : '0.0';
+            return `${label}: ₹${value.toFixed(2)}L (${pct}%)`;
+          } 
+        } 
       }
     },
     scales: {
@@ -164,20 +189,55 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div id="charts-section" className="space-y-6">
       {/* Top Row: Daily Trend, Segment, and Revenue Split */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <ChartCard 
           title="Daily Sales Trend — INFA vs INFB (₹ Lacs)" 
           subtitle="Click bars to filter plant"
           className="lg:col-span-2"
+          isLiveData={isLiveData}
+          onMaximize={() => onMaximize?.({
+            title: "Daily Sales Trend — INFA vs INFB (₹ Lacs)",
+            subtitle: "Total revenue progression across time",
+            children: <div className="h-96 md:h-[500px]"><Chart type="bar" data={dailyDataConfig as any} options={dailyOptions as any} /></div>
+          })}
         >
           <div key={`daily-${renderKey}`} className="h-full">
             <Chart type="bar" data={dailyDataConfig as any} options={dailyOptions as any} />
           </div>
         </ChartCard>
         
-        <ChartCard title="Sales by Segment" subtitle="Click segment to filter">
+        <ChartCard 
+          title="Sales by Segment" 
+          subtitle="Click segment to filter" 
+          isLiveData={isLiveData}
+          onMaximize={() => onMaximize?.({
+            title: "Sales by Segment",
+            subtitle: "Revenue distribution across business verticals",
+            children: <div className="h-96 md:h-[500px] flex items-center justify-center">
+              <Doughnut 
+                data={{
+                  labels: segmentData.labels,
+                  datasets: [{
+                    data: segmentData.data,
+                    backgroundColor: ['#a5b4fccc','#93c5fdcc','#6ee7b7cc','#fcd34dcc','#fda4afcc','#d8b4fecc','#67e8f9cc','#fb923ccc'],
+                    borderColor: darkMode ? '#1e293b' : '#fff',
+                    borderWidth: 2
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  cutout: '60%',
+                  plugins: {
+                    legend: { position: 'right', labels: { color: textColor, font: { size: 12 } } }
+                  }
+                }}
+              />
+            </div>
+          })}
+        >
           <div key={`segment-${renderKey}`} className="h-full flex items-center justify-center">
             <Doughnut 
               data={{
@@ -221,7 +281,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           </div>
         </ChartCard>
 
-        <ChartCard title="Revenue Split" subtitle="Click slice to filter">
+        <ChartCard title="Revenue Split" subtitle="Click slice to filter" isLiveData={isLiveData}>
           <div key={`split-${renderKey}`} className="h-full flex items-center justify-center">
             <Doughnut 
               data={{
@@ -267,7 +327,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ChartCard title="Sales by Account Manager" subtitle="₹ Lacs — performance view">
+        <ChartCard title="Sales by Account Manager" subtitle="₹ Lacs — performance view" isLiveData={isLiveData}>
           <div key={`mgr-${renderKey}`} className="h-full">
             <Bar 
               data={{
@@ -293,7 +353,14 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
                 legend: { display: false }, 
                 tooltip: { 
                   backgroundColor: '#1e293b',
-                  callbacks: { label: (c: any) => ` ₹${c.parsed.y.toFixed(2)}L` }
+                  callbacks: { 
+                    label: (c: any) => {
+                      const total = accMgrData.data.reduce((a, b) => a + b, 0);
+                      const val = c.parsed.y || 0;
+                      const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
+                      return ` ₹${val.toFixed(2)}L (${pct}%)`;
+                    }
+                  }
                 } 
               },
               scales: { x: { grid: { display: false }, ticks: { font: { size: 9 }, color: textColor } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { font: { size: 9 }, color: textColor } } }
@@ -301,7 +368,16 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           />
           </div>
         </ChartCard>
-        <ChartCard title="Delivery Variance Pareto" subtitle="Failure count by customer">
+        <ChartCard 
+          title="Delivery Variance Pareto" 
+          subtitle="Failure count by customer" 
+          isLiveData={isLiveData}
+          onMaximize={() => onMaximize?.({
+            title: "Delivery Variance Pareto",
+            subtitle: "Identify top contributors to OTIF failures",
+            children: <div className="h-96 md:h-[500px]"><Chart type="bar" data={paretoData as any} options={{ ...dailyOptions, plugins: { ...dailyOptions.plugins, legend: { position: 'top' } } } as any} /></div>
+          })}
+        >
           <div key={`pareto-${renderKey}`} className="h-full">
             <Chart 
               type="bar"
@@ -321,7 +397,17 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
                 legend: { position: 'top', labels: { usePointStyle: true, font: { size: 9, weight: 'bold' }, color: textColor } },
                 tooltip: { 
                   backgroundColor: '#1e293b',
-                  callbacks: { label: (c: any) => ` ${c.dataset.label}: ${c.dataset.type === 'line' ? c.parsed.y.toFixed(1) + '%' : c.parsed.y + ' failures'}` }
+                  callbacks: { 
+                    label: (c: any) => {
+                      const val = c.parsed.y || 0;
+                      const label = c.dataset.label || '';
+                      if (c.dataset.type === 'line') return ` ${label}: ${val.toFixed(1)}%`;
+                      
+                      const totalFailures = (c.chart.data.datasets[0].data as number[]).reduce((a, b) => a + b, 0);
+                      const pct = totalFailures > 0 ? ((val / totalFailures) * 100).toFixed(1) : '0.0';
+                      return ` ${label}: ${val} failures (${pct}%)`;
+                    }
+                  }
                 }
               },
               scales: { 
@@ -337,7 +423,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
 
       {/* Middle Row: Invoice Type, Product Type, Order Type */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <ChartCard title="Sales by Invoice Type" subtitle="Click to filter">
+        <ChartCard title="Sales by Invoice Type" subtitle="Click to filter" isLiveData={isLiveData}>
           <div key={`inv-${renderKey}`} className="h-full">
             <Bar 
               data={{
@@ -359,13 +445,26 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
                   onDrillDown('invType', invData.labels[idx]);
                 }
               },
-              plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1e293b', callbacks: { label: (c: any) => `₹${c.parsed.y.toFixed(2)}L` } } },
+              plugins: { 
+                legend: { display: false }, 
+                tooltip: { 
+                  backgroundColor: '#1e293b', 
+                  callbacks: { 
+                    label: (c: any) => {
+                      const total = invData.data.reduce((a, b) => a + b, 0);
+                      const val = c.parsed.y || 0;
+                      const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
+                      return ` ₹${val.toFixed(2)}L (${pct}%)`;
+                    }
+                  } 
+                } 
+              },
               scales: { x: { grid: { display: false }, ticks: { font: { size: 9 }, color: textColor } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { callback: (v: any) => `₹${v}L`, font: { size: 9 }, color: textColor } } }
             }}
           />
           </div>
         </ChartCard>
-        <ChartCard title="Product Type — Prod vs NPD" subtitle="Click bars to filter">
+        <ChartCard title="Product Type — Prod vs NPD" subtitle="Click bars to filter" isLiveData={isLiveData}>
            <div key={`prodnpd-${renderKey}`} className="h-full">
              <Bar 
               data={prodNpdData}
@@ -385,7 +484,18 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
                 legend: { position: 'top', labels: { usePointStyle: true, font: { size: 9, weight: 'bold' }, color: textColor } },
                 tooltip: { 
                   backgroundColor: '#1e293b',
-                  callbacks: { label: (c: any) => ` ${c.dataset.label}: ₹${c.parsed.y.toFixed(2)}L` }
+                  callbacks: { 
+                    label: (c: any) => {
+                      const val = c.parsed.y || 0;
+                      const label = c.dataset.label || '';
+                      let columnTotal = 0;
+                      c.chart.data.datasets.forEach((ds: any) => {
+                        columnTotal += ds.data[c.dataIndex] || 0;
+                      });
+                      const pct = columnTotal > 0 ? ((val / columnTotal) * 100).toFixed(1) : '0.0';
+                      return ` ${label}: ₹${val.toFixed(2)}L (${pct}%)`;
+                    }
+                  }
                 }
               },
               scales: { x: { grid: { display: false }, ticks: { color: textColor, font: { size: 9 } } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { callback: (v: any) => `₹${v}L`, font: { size: 9 }, color: textColor } } }
@@ -393,7 +503,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           />
           </div>
         </ChartCard>
-        <ChartCard title="Order Type — SCH / PO / IU" subtitle="Click bars to filter">
+        <ChartCard title="Order Type — SCH / PO / IU" subtitle="Click bars to filter" isLiveData={isLiveData}>
            <div key={`ordtype-${renderKey}`} className="h-full">
              <Bar 
               data={schPoData}
@@ -413,7 +523,18 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
                 legend: { position: 'top', labels: { usePointStyle: true, font: { size: 9, weight: 'bold' }, color: textColor } },
                 tooltip: { 
                   backgroundColor: '#1e293b',
-                  callbacks: { label: (c: any) => ` ${c.dataset.label}: ₹${c.parsed.y.toFixed(2)}L` }
+                  callbacks: { 
+                    label: (c: any) => {
+                      const val = c.parsed.y || 0;
+                      const label = c.dataset.label || '';
+                      let columnTotal = 0;
+                      c.chart.data.datasets.forEach((ds: any) => {
+                        columnTotal += ds.data[c.dataIndex] || 0;
+                      });
+                      const pct = columnTotal > 0 ? ((val / columnTotal) * 100).toFixed(1) : '0.0';
+                      return ` ${label}: ₹${val.toFixed(2)}L (${pct}%)`;
+                    }
+                  }
                 }
               },
               scales: { x: { grid: { display: false }, ticks: { color: textColor, font: { size: 9 } } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { callback: (v: any) => `₹${v}L`, font: { size: 9 }, color: textColor } } }
@@ -425,7 +546,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
 
       {/* Bottom Row: Top Customers and Materials */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         <ChartCard title="Top 10 Customers by Sales Value" subtitle="Click customer to filter">
+         <ChartCard title="Top 10 Customers by Sales Value" subtitle="Click customer to filter" isLiveData={isLiveData}>
           <div key={`cust-${renderKey}`} className="h-full">
             <Bar 
               data={{
@@ -455,7 +576,14 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
                 legend: { display: false }, 
                 tooltip: { 
                   backgroundColor: '#1e293b',
-                  callbacks: { label: (c: any) => ` ₹${c.parsed.x.toFixed(2)}L` }
+                  callbacks: { 
+                    label: (c: any) => {
+                      const total = topCustData.data.reduce((a, b) => a + b, 0);
+                      const val = c.parsed.x || 0; // Horizontal bar uses X for value
+                      const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
+                      return ` ₹${val.toFixed(2)}L (${pct}%)`;
+                    }
+                  }
                 } 
               },
               scales: { 
@@ -466,7 +594,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           />
           </div>
         </ChartCard>
-        <ChartCard title="Top 10 Materials by Sales Value" subtitle="Click material to filter">
+        <ChartCard title="Top 10 Materials by Sales Value" subtitle="Click material to filter" isLiveData={isLiveData}>
           <div key={`mat-${renderKey}`} className="h-full">
             <Bar 
               data={{
@@ -496,7 +624,14 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
                 legend: { display: false },
                 tooltip: { 
                   backgroundColor: '#1e293b',
-                  callbacks: { label: (c: any) => ` ₹${c.parsed.x.toFixed(2)}L` }
+                  callbacks: { 
+                    label: (c: any) => {
+                      const total = topMatData.data.reduce((a, b) => a + b, 0);
+                      const val = c.parsed.x || 0;
+                      const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
+                      return ` ₹${val.toFixed(2)}L (${pct}%)`;
+                    }
+                  }
                 }
               },
               scales: { 
@@ -517,16 +652,37 @@ const ChartCard: React.FC<{
   subtitle: string; 
   children: React.ReactNode; 
   className?: string; 
-}> = ({ title, subtitle, children, className }) => (
+  isLiveData: boolean;
+  onMaximize?: () => void;
+}> = ({ title, subtitle, children, className, isLiveData, onMaximize }) => (
   <div className={cn(
-    "bg-card-bg dark:bg-card-bg-dark rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-300 hover:shadow-md",
+    "bg-card-bg dark:bg-card-bg-dark rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-2xl hover:border-slate-300 dark:hover:border-slate-700 relative overflow-hidden group",
     className
   )}>
-    <div className="mb-6 flex flex-col gap-1">
-      <h3 className="text-[13px] font-black text-primary-text dark:text-primary-text-dark tracking-tight uppercase">{title}</h3>
-      <p className="text-[10px] text-secondary-text dark:text-secondary-text-dark font-bold uppercase tracking-widest opacity-80">{subtitle}</p>
+    {/* Subtle grid pattern background accent */}
+    <div className="absolute inset-0 bg-[radial-gradient(#64748b_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.02] pointer-events-none" />
+
+    {!isLiveData && (
+      <div className="absolute top-0 right-0 px-2.5 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[8px] font-mono font-bold uppercase tracking-[0.2em] rounded-bl-xl border-b border-l border-amber-500/20 z-10 transition-opacity group-hover:opacity-100">
+        DEMO_ENV
+      </div>
+    )}
+    <div className="mb-8 flex justify-between items-start relative z-10 border-b border-slate-50 dark:border-slate-800/50 pb-5">
+      <div className="flex flex-col gap-1">
+        <h3 className="text-sm font-bold text-primary-text dark:text-primary-text-dark tracking-tight uppercase">{title}</h3>
+        <p className="text-[9px] text-secondary-text dark:text-secondary-text-dark font-mono font-bold uppercase tracking-[0.25em] opacity-40 italic">{subtitle}</p>
+      </div>
+      {onMaximize && (
+        <button 
+          onClick={onMaximize}
+          className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary-accent transition-all opacity-0 group-hover:opacity-100 border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+          title="Zoom Chart"
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+        </button>
+      )}
     </div>
-    <div className="h-[250px]">
+    <div className="h-[250px] relative z-10">
       {children}
     </div>
   </div>

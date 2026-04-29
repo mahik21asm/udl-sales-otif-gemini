@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { cn } from '../lib/utils';
-import { RotateCcw, Moon, Sun, LogIn, User as UserIcon, LogOut } from 'lucide-react';
+import { RotateCcw, Moon, Sun, LogIn, User as UserIcon, ChevronDown, ChevronUp, Filter, Maximize2, Minimize2, Eye } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { loginWithGoogle, auth } from '../lib/firebase';
 import { User, signOut } from 'firebase/auth';
 
@@ -35,6 +36,7 @@ interface HeaderProps {
   customers: string[];
   accMgrs: string[];
   isLiveData: boolean;
+  isLoading: boolean;
   dateBounds: { min: string; max: string };
   lastUpdated: string | null;
   onResetFilters: () => void;
@@ -50,6 +52,8 @@ interface HeaderProps {
   setOrderType: (v: string) => void;
   isSto: boolean | null;
   setIsSto: (v: boolean | null) => void;
+  concentrateMode: boolean;
+  setConcentrateMode: (v: boolean) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -64,6 +68,7 @@ const Header: React.FC<HeaderProps> = ({
   customers,
   accMgrs,
   isLiveData,
+  isLoading,
   dateBounds,
   lastUpdated,
   onResetFilters,
@@ -74,8 +79,30 @@ const Header: React.FC<HeaderProps> = ({
   material, setMaterial,
   productType, setProductType,
   orderType, setOrderType,
-  isSto, setIsSto
+  isSto, setIsSto,
+  concentrateMode, setConcentrateMode
 }) => {
+  const [filtersExpanded, setFiltersExpanded] = useState(true);
+
+  // Sync filtersExpanded with concentrateMode for initial toggle
+  const toggleConcentrate = () => {
+    const next = !concentrateMode;
+    setConcentrateMode(next);
+    if (next) setFiltersExpanded(false);
+    else setFiltersExpanded(true);
+  };
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => setIsFullscreen(true));
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().then(() => setIsFullscreen(false));
+      }
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -97,216 +124,277 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <div className="flex flex-col border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 print:hidden transition-colors duration-300">
-      <div className="bg-card-bg dark:bg-card-bg-dark px-6 py-4 flex flex-wrap justify-between items-center gap-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors duration-300">
-        <div className="flex items-center gap-3">
+    <div id="dashboard-header" className="flex flex-col border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 print:hidden transition-all duration-500 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80">
+      <div className="px-6 py-4 flex flex-wrap justify-between items-center gap-4 relative">
+        {/* Technical Top Border Accent */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary-accent/30 to-transparent" />
+        
+        <div className="flex items-center gap-5">
           <div 
-            className="w-10 h-10 bg-primary-accent dark:bg-primary-accent-dark rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-accent/10 dark:shadow-none uppercase font-black text-xs cursor-pointer hover:scale-105 transition-transform"
+            className="w-12 h-12 bg-slate-900 dark:bg-primary-accent rounded-2xl flex flex-col items-center justify-center text-white shadow-2xl shadow-primary-accent/20 cursor-pointer hover:rotate-[360deg] transition-all duration-700 active:scale-95 group"
             onClick={handlePrint}
             title="Print Report"
           >
-             DS
+             <span className="text-[10px] font-black tracking-widest leading-none">UDL</span>
+             <div className="w-1 h-1 bg-white rounded-full mt-1 group-hover:scale-150 transition-transform" />
           </div>
-          <div>
-            <h1 className="text-lg font-extrabold text-primary-text dark:text-primary-text-dark tracking-tight flex items-center gap-2">
-              UDL Sales & OTIF Dashboard
+          
+          <div className={cn("transition-all duration-500 origin-left", concentrateMode ? "opacity-30 scale-95 grayscale" : "opacity-100 scale-100")}>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tighter uppercase">Intell_Dash</h1>
               <span className={cn(
-                "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                isLiveData ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-primary-accent/10 text-primary-accent dark:bg-primary-accent-dark/30 dark:text-primary-accent-dark"
+                "px-2 py-0.5 rounded-full text-[8px] font-mono font-bold uppercase tracking-widest",
+                isLiveData 
+                  ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" 
+                  : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
               )}>
-                {isLiveData ? "Live" : "Sample"}
+                {isLiveData ? "LIVE_STREAM" : "DEMO_SYNC"}
               </span>
-            </h1>
-            <div className="flex flex-col">
-              <p className="text-[11px] text-secondary-text dark:text-secondary-text-dark mt-0.5 font-medium flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                {dateBounds.min || 'Apr 2026'} - {dateBounds.max || 'Apr 2026'}
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-primary-accent rounded-full animate-pulse" />
+                <p className="text-[9px] text-slate-400 font-mono font-bold uppercase tracking-[0.2em]">NAS_MN_CLUSTER_V4.2</p>
+              </div>
+              <p className="text-[9px] text-slate-300 dark:text-slate-600 font-mono tracking-widest">
+                {dateBounds.min || '01-04-2026'} <span className="opacity-30">{" >> "}</span> {dateBounds.max || '30-04-2026'}
               </p>
-              {lastUpdated && (
-                <p className="text-[9px] text-secondary-text dark:text-secondary-text-dark font-bold uppercase tracking-wider mt-0.5 opacity-80">
-                  Last Refreshed: {lastUpdated}
-                </p>
-              )}
             </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-5 items-center">
-          <FilterGroup label="Plant">
-            <select 
-              value={plant} 
-              onChange={(e) => setPlant(e.target.value)}
-              className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium"
-            >
-              <option value="ALL">All Plants</option>
-              <option value="INFA">INFA — UDL Nashik</option>
-              <option value="INFB">INFB — Maneck Nagar</option>
-            </select>
-          </FilterGroup>
-
-          <FilterGroup label="Invoice Type">
-            <select 
-              value={invType} 
-              onChange={(e) => setInvType(e.target.value)}
-              className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium"
-            >
-              <option value="ALL">All Types</option>
-              <option value="Domestic Invoice">Domestic</option>
-              <option value="Export Invoice">Export</option>
-              <option value="STO Invoice(Proforma)">STO / Proforma</option>
-              <option value="Ret. Ord. Credit memo">Credit Memo</option>
-            </select>
-          </FilterGroup>
-
-          <FilterGroup label="Segment">
-            <select 
-              value={segment} 
-              onChange={(e) => setSegment(e.target.value)}
-              className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium min-w-[140px]"
-            >
-              <option value="ALL">All Segments</option>
-              {(segments || []).map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </FilterGroup>
-
-          <FilterGroup label="Customer">
-            <select 
-              value={customer} 
-              onChange={(e) => setCustomer(e.target.value)}
-              className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium max-w-[150px]"
-            >
-              <option value="ALL">All Customers</option>
-              {(customers || []).map(c => {
-                const label = String(c || '');
-                return (
-                  <option key={c} value={c}>
-                    {label.substring(0, 30)}{label.length > 30 ? '...' : ''}
-                  </option>
-                );
-              })}
-            </select>
-          </FilterGroup>
-
-          <FilterGroup label="AM / Rep">
-            <select 
-              value={accMgr} 
-              onChange={(e) => setAccMgr(e.target.value)}
-              className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium max-w-[150px]"
-            >
-              <option value="ALL">All AMs</option>
-              {(accMgrs || []).map(am => <option key={am} value={am}>{am}</option>)}
-            </select>
-          </FilterGroup>
-
-          <div className="flex gap-3">
-            <FilterGroup label="From">
-              <input 
-                type="date" 
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium" 
-              />
-            </FilterGroup>
-            <FilterGroup label="To">
-              <input 
-                type="date" 
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-medium" 
-              />
-            </FilterGroup>
+        <div className="flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-1.5 mr-4 px-4 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+            <div className="flex flex-col items-end">
+              <span className="text-[8px] font-mono font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">System_Clock</span>
+              <span className="text-[10px] font-mono font-bold text-slate-700 dark:text-slate-300">{new Date().toLocaleTimeString([], { hour12: false })}</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-700 pl-5">
+          <div className="flex bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-2xl border border-slate-100 dark:border-slate-800/50">
             <button
-              onClick={onResetFilters}
-              className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-secondary-text dark:text-secondary-text-dark hover:text-primary-accent dark:hover:text-primary-accent-dark hover:bg-primary-accent/10 dark:hover:bg-primary-accent-dark/20 rounded-lg transition-all border border-transparent hover:border-primary-accent/20 dark:hover:border-primary-accent-dark/30"
-              title="Clear all filters"
+              onClick={toggleFullscreen}
+              className="p-2.5 rounded-xl text-slate-400 hover:text-primary-accent hover:bg-white dark:hover:bg-slate-800 transition-all active:scale-95"
+              title="Fullscreen"
             >
-              <RotateCcw size={14} />
-              Reset
+              {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
             </button>
-
             <button
+              onClick={toggleConcentrate}
+              className={cn(
+                "p-2.5 rounded-xl transition-all active:scale-95",
+                concentrateMode ? "text-amber-500 bg-white dark:bg-slate-800 shadow-sm" : "text-slate-400 hover:text-amber-500 hover:bg-white dark:hover:bg-slate-800"
+              )}
+              title="Focus Mode"
+            >
+              <Eye size={16} />
+            </button>
+            <button
+              onClick={() => setFiltersExpanded(!filtersExpanded)}
+              className={cn(
+                "p-2.5 rounded-xl transition-all active:scale-95 relative",
+                filtersExpanded ? "text-primary-accent bg-white dark:bg-slate-800 shadow-sm" : "text-slate-400 hover:text-primary-accent hover:bg-white dark:hover:bg-slate-800"
+              )}
+              title="Toggle Filters"
+            >
+              <Filter size={16} />
+              {(plant !== 'ALL' || segment !== 'ALL' || customer !== 'ALL') && !filtersExpanded && (
+                <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-primary-accent rounded-full ring-2 ring-white dark:ring-slate-900" />
+              )}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-800 ml-1">
+             <button
               onClick={toggleDarkMode}
-              className="p-2 rounded-lg bg-page-bg dark:bg-slate-800 text-secondary-text dark:text-secondary-text-dark hover:bg-primary-accent hover:text-white dark:hover:bg-primary-accent-dark transition-all shadow-sm"
-              title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary-accent transition-all border border-slate-100 dark:border-slate-800"
             >
               {darkMode ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
             {user ? (
-              <div className="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-3">
                 <div className="flex flex-col items-end">
-                  <span className="text-[10px] font-black text-primary-text dark:text-primary-text-dark uppercase tracking-tight">{user.displayName || 'Cloud User'}</span>
-                  <div className="flex gap-2">
-                    <button onClick={onClearData} className="text-[9px] font-bold text-slate-400 hover:text-danger uppercase transition-colors">Clear DB</button>
-                    <button onClick={handleLogout} className="text-[9px] font-bold text-danger uppercase hover:underline">Logout</button>
-                  </div>
+                  <span className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-tighter leading-none mb-1">{user.displayName?.split(' ')[0] || 'ADMIN'}</span>
+                  <button onClick={handleLogout} className="text-[8px] font-mono font-bold text-danger hover:underline uppercase tracking-widest opacity-60">Term_Session</button>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-primary-accent/10 dark:bg-primary-accent/20 border border-primary-accent/20 dark:border-primary-accent/30 flex items-center justify-center overflow-hidden">
-                  {user.photoURL ? <img src={user.photoURL} alt="User" /> : <UserIcon size={14} className="text-primary-accent dark:text-primary-accent-dark" />}
+                <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-slate-800 shadow-xl overflow-hidden ring-1 ring-slate-100 dark:ring-slate-800">
+                  {user.photoURL ? <img src={user.photoURL} alt="User" /> : <UserIcon size={16} className="m-2 text-slate-400" />}
                 </div>
               </div>
             ) : (
               <button
                 onClick={handleLogin}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-accent hover:opacity-90 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-primary-accent/20 dark:shadow-none transition-all"
+                className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] shadow-xl hover:translate-y-[-1px] transition-all flex items-center gap-2"
               >
-                <LogIn size={14} />
-                Login to Sync
+                <LogIn size={14} /> AUTH_SYS
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Active Filter Pills (for hidden drill-down filters) */}
-      {(material !== 'ALL' || productType !== 'ALL' || orderType !== 'ALL' || isSto !== null) && (
-        <div className="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-6 py-2 flex flex-wrap gap-2 items-center">
-          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-2">Active Drill-down:</span>
+      <AnimatePresence>
+        {filtersExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden bg-card-bg dark:bg-card-bg-dark"
+          >
+            <div id="filter-controls" className="px-6 pb-6 pt-2 flex flex-wrap gap-5 items-center bg-card-bg dark:bg-card-bg-dark border-t border-slate-100 dark:border-slate-800/50">
+              <FilterGroup label="Plant">
+                <select 
+                  value={plant} 
+                  disabled={isLoading}
+                  onChange={(e) => setPlant(e.target.value)}
+                  className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-[11px] text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-mono font-bold disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-tighter"
+                >
+                  <option value="ALL">ALL_PLANTS</option>
+                  <option value="INFA">INFA_NASHIK</option>
+                  <option value="INFB">INFB_MANECK</option>
+                </select>
+              </FilterGroup>
+
+              <FilterGroup label="Invoice Type">
+                <select 
+                  value={invType} 
+                  disabled={isLoading}
+                  onChange={(e) => setInvType(e.target.value)}
+                  className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-[11px] text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-mono font-bold disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-tighter"
+                >
+                  <option value="ALL">ALL_TYPES</option>
+                  <option value="Domestic Invoice">DOMESTIC</option>
+                  <option value="Export Invoice">EXPORT</option>
+                  <option value="STO Invoice(Proforma)">STO/PROF</option>
+                  <option value="Ret. Ord. Credit memo">CREDIT</option>
+                </select>
+              </FilterGroup>
+
+              <FilterGroup label="Segment">
+                <select 
+                  value={segment} 
+                  disabled={isLoading}
+                  onChange={(e) => setSegment(e.target.value)}
+                  className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-[11px] text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-mono font-bold min-w-[140px] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-tighter"
+                >
+                  <option value="ALL">ALL_SEGMENTS</option>
+                  {(segments || []).map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </FilterGroup>
+
+              <FilterGroup label="Customer">
+                <select 
+                  value={customer} 
+                  disabled={isLoading}
+                  onChange={(e) => setCustomer(e.target.value)}
+                  className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-[11px] text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-accent transition-all font-mono font-bold max-w-[150px] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-tighter"
+                >
+                  <option value="ALL">ALL_CUSTOMERS</option>
+                  {(customers || []).map(c => {
+                    const label = String(c || '');
+                    return (
+                      <option key={c} value={c}>
+                        {label.substring(0, 30)}{label.length > 30 ? '...' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+              </FilterGroup>
+
+              <div className="flex gap-3">
+                <FilterGroup label="Date Range">
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="date" 
+                      value={dateFrom}
+                      disabled={isLoading}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-[10px] text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary-accent transition-all font-mono font-bold disabled:opacity-50" 
+                    />
+                    <span className="text-slate-300">/</span>
+                    <input 
+                      type="date" 
+                      value={dateTo}
+                      disabled={isLoading}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="bg-page-bg dark:bg-page-bg-dark border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-[10px] text-primary-text dark:text-primary-text-dark cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary-accent transition-all font-mono font-bold disabled:opacity-50" 
+                    />
+                  </div>
+                </FilterGroup>
+              </div>
+
+              <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-700 pl-5">
+                <button
+                  onClick={onResetFilters}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-mono font-bold text-secondary-text dark:text-secondary-text-dark hover:text-danger hover:bg-danger/10 rounded-lg transition-all border border-transparent uppercase tracking-widest"
+                >
+                  <RotateCcw size={12} />
+                  SCRUB_ALL
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Active Filter Pills (for hidden drill-down or collapsed main filters) */}
+      {(plant !== 'ALL' || invType !== 'ALL' || segment !== 'ALL' || customer !== 'ALL' || accMgr !== 'ALL' || material !== 'ALL' || productType !== 'ALL' || orderType !== 'ALL' || isSto !== null) && (
+        <div className="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-6 py-1.5 flex flex-wrap gap-2 items-center">
+          <span className="text-[8px] font-mono font-bold text-slate-400 uppercase tracking-widest mr-2 opacity-50">ACTIVE_FILTERS::</span>
           
+          {plant !== 'ALL' && (
+            <button 
+              onClick={() => setPlant('ALL')}
+              className="px-2 py-0.5 bg-slate-200 dark:bg-slate-800 text-primary-text dark:text-primary-text-dark rounded text-[9px] font-mono font-bold flex items-center gap-1.5 hover:bg-danger/10 hover:text-danger transition-colors cursor-pointer border border-slate-300 dark:border-slate-700"
+            >
+              PLANT:{plant} <span className="opacity-40">×</span>
+            </button>
+          )}
+
+          {invType !== 'ALL' && (
+            <button 
+              onClick={() => setInvType('ALL')}
+              className="px-2 py-0.5 bg-slate-200 dark:bg-slate-800 text-primary-text dark:text-primary-text-dark rounded text-[9px] font-mono font-bold flex items-center gap-1.5 hover:bg-danger/10 hover:text-danger transition-colors cursor-pointer border border-slate-300 dark:border-slate-700"
+            >
+              TYPE:{invType.substring(0, 3).toUpperCase()} <span className="opacity-40">×</span>
+            </button>
+          )}
+
+          {segment !== 'ALL' && (
+            <button 
+              onClick={() => setSegment('ALL')}
+              className="px-2 py-0.5 bg-slate-200 dark:bg-slate-800 text-primary-text dark:text-primary-text-dark rounded text-[9px] font-mono font-bold flex items-center gap-1.5 hover:bg-danger/10 hover:text-danger transition-colors cursor-pointer border border-slate-300 dark:border-slate-700"
+            >
+              SEG:{segment.substring(0, 10)} <span className="opacity-40">×</span>
+            </button>
+          )}
+
+          {customer !== 'ALL' && (
+            <button 
+              onClick={() => setCustomer('ALL')}
+              className="px-2 py-0.5 bg-slate-200 dark:bg-slate-800 text-primary-text dark:text-primary-text-dark rounded text-[9px] font-mono font-bold flex items-center gap-1.5 hover:bg-danger/10 hover:text-danger transition-colors cursor-pointer border border-slate-300 dark:border-slate-700"
+            >
+              CUST:{customer.substring(0, 10)} <span className="opacity-40">×</span>
+            </button>
+          )}
+
           {material !== 'ALL' && (
             <button 
               onClick={() => setMaterial('ALL')}
-              className="px-2 py-1 bg-primary-accent/10 text-primary-accent dark:bg-primary-accent-dark/20 dark:text-primary-accent-dark rounded-md text-[10px] font-bold flex items-center gap-1.5 hover:bg-danger/10 hover:text-danger transition-colors cursor-pointer"
+              className="px-2 py-0.5 bg-primary-accent/10 text-primary-accent dark:bg-primary-accent-dark/20 dark:text-primary-accent-dark rounded text-[9px] font-mono font-bold flex items-center gap-1.5 hover:bg-danger/10 hover:text-danger transition-colors cursor-pointer border border-primary-accent/20"
             >
-              Material: {material} <span className="opacity-60">×</span>
-            </button>
-          )}
-
-          {productType !== 'ALL' && (
-            <button 
-              onClick={() => setProductType('ALL')}
-              className="px-2 py-1 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-md text-[10px] font-bold flex items-center gap-1.5 hover:bg-danger/10 hover:text-danger transition-colors cursor-pointer"
-            >
-              Type: {productType === 'Produ' ? 'Production' : productType} <span className="opacity-60">×</span>
-            </button>
-          )}
-
-          {orderType !== 'ALL' && (
-            <button 
-              onClick={() => setOrderType('ALL')}
-              className="px-2 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md text-[10px] font-bold flex items-center gap-1.5 hover:bg-danger/10 hover:text-danger transition-colors cursor-pointer"
-            >
-              Order: {orderType} <span className="opacity-60">×</span>
-            </button>
-          )}
-
-          {isSto !== null && (
-            <button 
-              onClick={() => setIsSto(null)}
-              className="px-2 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md text-[10px] font-bold flex items-center gap-1.5 hover:bg-danger/10 hover:text-danger transition-colors cursor-pointer"
-            >
-              Mode: {isSto ? 'STO Only' : 'External Only'} <span className="opacity-60">×</span>
+              MAT:{material.substring(0, 10)} <span className="opacity-40">×</span>
             </button>
           )}
           
           <button 
-            onClick={() => { setMaterial('ALL'); setProductType('ALL'); setOrderType('ALL'); setIsSto(null); }}
-            className="text-[9px] font-bold text-danger hover:underline ml-2 uppercase"
+            onClick={onResetFilters}
+            className="text-[8px] font-mono font-bold text-danger hover:underline ml-2 uppercase tracking-widest opacity-60"
           >
-            Clear All
+            [CLEAR_ALL]
           </button>
         </div>
       )}

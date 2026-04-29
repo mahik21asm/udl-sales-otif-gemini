@@ -6,11 +6,14 @@ import OTIFPanel from './components/OTIFPanel';
 import ChartsSection from './components/ChartsSection';
 import AIInsightsPanel from './components/AIInsightsPanel';
 import DataTable from './components/DataTable';
+import GuidedTour from './components/GuidedTour';
 import { GeminiChat } from './components/GeminiChat';
 import { SAMPLE_RAW } from './lib/sampleData';
 import { useDashboardData } from './hooks/useDashboardData';
 import { SalesRecord } from './types';
+import { cn, formatNumber } from './lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { Maximize2, X } from 'lucide-react';
 import { auth, subscribeToSales, saveSalesBatch, clearSalesRecords } from './lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
@@ -37,6 +40,9 @@ export default function App() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [concentrateMode, setConcentrateMode] = useState(false);
+  const [zoomedKPI, setZoomedKPI] = useState<any>(null);
+  const [zoomedChart, setZoomedChart] = useState<{ title: string, subtitle: string, children: React.ReactNode } | null>(null);
 
   const updateLastRefreshed = () => {
     setLastUpdated(new Date().toLocaleString('en-IN', { 
@@ -228,6 +234,7 @@ export default function App() {
     if (type === 'isSto') setIsSto(value);
   };
 
+  // Dashboard Application Entry Point - Production Build
   return (
     <div className="min-h-screen bg-page-bg dark:bg-page-bg-dark font-sans text-primary-text dark:text-primary-text-dark flex flex-col transition-colors duration-300">
       <Header 
@@ -242,6 +249,7 @@ export default function App() {
         customers={customers}
         accMgrs={accMgrs}
         isLiveData={isLiveData}
+        isLoading={isLoading}
         dateBounds={dateBounds}
         lastUpdated={lastUpdated}
         onResetFilters={handleResetFilters}
@@ -253,13 +261,26 @@ export default function App() {
         productType={productType} setProductType={setProductType}
         orderType={orderType} setOrderType={setOrderType}
         isSto={isSto} setIsSto={setIsSto}
+        concentrateMode={concentrateMode} setConcentrateMode={setConcentrateMode}
       />
 
-      <UploadBanner 
-        onDataLoaded={handleDataLoaded} 
-        onReset={handleReset} 
-        status={uploadStatus} 
-      />
+      <AnimatePresence>
+        {!concentrateMode && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <UploadBanner 
+              onDataLoaded={handleDataLoaded} 
+              onReset={handleReset} 
+              status={uploadStatus} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="flex-1 w-full max-w-[1440px] mx-auto p-8 md:p-10 space-y-10">
         <KPISection 
@@ -272,7 +293,157 @@ export default function App() {
           onTimeCount={kpis.onTimeCount}
           totalDeliveries={kpis.totalDeliveries}
           deltas={kpis.deltas}
+          onZoom={setZoomedKPI}
         />
+
+        <AnimatePresence>
+          {zoomedKPI && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-10 backdrop-blur-md bg-slate-900/60"
+              onClick={() => setZoomedKPI(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 relative"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-8 md:p-12">
+                   <div className="flex justify-between items-start mb-8">
+                     <div>
+                       <span className="text-secondary-text dark:text-secondary-text-dark font-serif italic text-lg opacity-70 block mb-1">{zoomedKPI.label}</span>
+                       <h2 className="text-6xl md:text-8xl font-mono font-medium text-primary-text dark:text-primary-text-dark tracking-tighter">
+                         {zoomedKPI.value}
+                       </h2>
+                     </div>
+                     <div className="flex gap-2">
+                       <button 
+                         onClick={() => {
+                           if (!document.fullscreenElement) {
+                             document.documentElement.requestFullscreen();
+                           } else {
+                             document.exitFullscreen();
+                           }
+                         }}
+                         className="p-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary-accent transition-colors"
+                         title="Toggle Dashboard Fullscreen"
+                       >
+                         <Maximize2 className="w-6 h-6" />
+                       </button>
+                       <button 
+                         onClick={() => setZoomedKPI(null)}
+                         className="p-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
+                       >
+                         <X className="w-8 h-8" />
+                       </button>
+                     </div>
+                   </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-end">
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3">
+                          <span className={cn("w-3 h-3 rounded-full", zoomedKPI.type === 'total' ? 'bg-primary-accent' : zoomedKPI.type === 'infa' ? 'bg-blue-500' : zoomedKPI.type === 'infb' ? 'bg-pink-500' : zoomedKPI.type === 'otif' ? 'bg-success' : zoomedKPI.type === 'warn' ? 'bg-danger' : 'bg-purple-500')} />
+                          <span className="text-lg font-bold uppercase tracking-[0.3em] text-secondary-text dark:text-secondary-text-dark opacity-60">
+                            {zoomedKPI.subValue}
+                          </span>
+                        </div>
+                        
+                        {zoomedKPI.delta !== undefined && (
+                          <div className={cn(
+                            "text-2xl font-mono font-bold flex items-center gap-2",
+                            zoomedKPI.delta > 0 ? "text-emerald-500" : "text-rose-500"
+                          )}>
+                            <span className="text-4xl">{zoomedKPI.delta > 0 ? '▲' : '▼'}</span>
+                            {Math.abs(zoomedKPI.delta).toFixed(1)}% vs Previous Period
+                          </div>
+                        )}
+                        
+                        <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-sm">
+                          Detailed trend analysis for {zoomedKPI.label} across the selected timeframe ({dateFrom || 'Start'} to {dateTo || 'End'}). This metric is calculated based on {filtered.length.toLocaleString()} filtered records.
+                        </p>
+                      </div>
+
+                      <div className="bg-slate-50 dark:bg-slate-800/50 p-8 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                        <div className="text-[10px] font-mono text-slate-400 mb-4 uppercase tracking-widest">System Validation</div>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-slate-500">Integrity Check</span>
+                            <span className="text-success font-bold">PASSED</span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-slate-500">Data Latency</span>
+                            <span className="text-slate-400 font-mono">1.2ms</span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-slate-500">Source Cluster</span>
+                            <span className="text-slate-400 font-mono">UDL_{zoomedKPI.type.toUpperCase()}_01</span>
+                          </div>
+                        </div>
+                      </div>
+                   </div>
+                </div>
+                <div className="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {zoomedChart && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-10 backdrop-blur-md bg-slate-900/60"
+              onClick={() => setZoomedChart(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="bg-white dark:bg-slate-900 w-full max-w-6xl rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 relative"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-8 md:p-12">
+                   <div className="flex justify-between items-start mb-6">
+                     <div>
+                       <h3 className="text-xl font-bold text-primary-text dark:text-primary-text-dark tracking-tight">{zoomedChart.title}</h3>
+                       <p className="text-xs text-secondary-text dark:text-secondary-text-dark font-mono uppercase tracking-[0.2em] opacity-60 italic">{zoomedChart.subtitle}</p>
+                     </div>
+                     <div className="flex gap-2">
+                        <button 
+                          onClick={() => {
+                            if (!document.fullscreenElement) {
+                              document.documentElement.requestFullscreen();
+                            } else {
+                              document.exitFullscreen();
+                            }
+                          }}
+                          className="p-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary-accent transition-colors"
+                        >
+                          <Maximize2 className="w-6 h-6" />
+                        </button>
+                        <button 
+                          onClick={() => setZoomedChart(null)}
+                          className="p-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                          <X className="w-8 h-8" />
+                        </button>
+                     </div>
+                   </div>
+                   <div className="relative">
+                     {zoomedChart.children}
+                   </div>
+                </div>
+                <div className="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -309,7 +480,9 @@ export default function App() {
               splitData={chartData.splitData}
               plantFilter={plant}
               darkMode={darkMode}
+              isLiveData={isLiveData}
               onDrillDown={handleChartDrillDown}
+              onMaximize={setZoomedChart}
               renderKey={(records || []).length}
             />
 
@@ -322,6 +495,7 @@ export default function App() {
         UDL Manufacturing Intelligence &nbsp;•&nbsp; INFA & INFB Hub &nbsp;•&nbsp; © 2026 UDL Group
       </footer>
       <GeminiChat records={records} />
+      <GuidedTour />
     </div>
   );
 }

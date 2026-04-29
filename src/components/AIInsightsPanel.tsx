@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, Loader2, RefreshCw, AlertTriangle, Lightbulb, TrendingUp } from 'lucide-react';
-import { getDashboardInsights, DashboardInsights } from '../services/gemini';
+import { getDashboardInsights, DashboardInsights } from '../services/geminiService';
 
 interface AIInsightsPanelProps {
   data: any;
@@ -26,25 +26,25 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ data }) => {
   };
 
   return (
-    <div className="bg-card-bg dark:bg-card-bg-dark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.05)] overflow-hidden transition-all duration-300">
+    <div className="bg-card-bg dark:bg-card-bg-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgba(0,0,0,0.02)] overflow-hidden transition-all duration-300">
       <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-page-bg dark:bg-slate-800/30">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-primary-accent/10 dark:bg-primary-accent/20 rounded-lg text-primary-accent dark:text-primary-accent-dark">
             <Sparkles size={16} />
           </div>
           <div>
-            <h3 className="text-sm font-black text-primary-text dark:text-primary-text-dark uppercase tracking-tight">AI Executive Summary</h3>
-            <p className="text-[10px] text-secondary-text dark:text-secondary-text-dark font-bold uppercase tracking-widest opacity-80">Powered by Gemini 3 Flash</p>
+            <h3 className="text-sm font-bold text-primary-text dark:text-primary-text-dark tracking-tight">AI Executive Summary</h3>
+            <p className="text-[9px] text-secondary-text dark:text-secondary-text-dark font-mono font-medium uppercase tracking-[0.1em] opacity-60 italic">Intelligence Layer: Gemini 1.5 Flash</p>
           </div>
         </div>
         
         <button
           onClick={fetchInsights}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-accent hover:opacity-90 text-white text-[11px] font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-accent/20 dark:shadow-none"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-accent hover:opacity-90 text-white text-[10px] font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-accent/20 dark:shadow-none uppercase tracking-wider"
         >
           {loading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
-          {insights ? 'REFRESH INSIGHTS' : 'GENERATE INSIGHTS'}
+          {insights ? 'Re-Sync Analysis' : 'Analyze Manufacturing Data'}
         </button>
       </div>
 
@@ -57,12 +57,12 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ data }) => {
               exit={{ opacity: 0 }}
               className="flex flex-col items-center justify-center py-10 text-center space-y-4"
             >
-              <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600">
+              <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600 border border-slate-100 dark:border-slate-700">
                 <TrendingUp size={24} />
               </div>
               <div className="max-w-xs">
-                <h4 className="text-sm font-bold text-primary-text dark:text-primary-text-dark mb-1">Deep Intelligence Ready</h4>
-                <p className="text-xs text-secondary-text dark:text-secondary-text-dark">Generate real-time business insights, risks, and recommendations using AI.</p>
+                <h4 className="text-sm font-bold text-primary-text dark:text-primary-text-dark mb-1">Pattern recognition ready</h4>
+                <p className="text-xs text-secondary-text dark:text-secondary-text-dark">Execute Gemini analysis to reveal hidden manufacturing risks and performance clusters.</p>
               </div>
             </motion.div>
           ) : loading ? (
@@ -72,47 +72,47 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ data }) => {
               exit={{ opacity: 0 }}
               className="flex flex-col items-center justify-center py-12 text-center"
             >
-              <Loader2 size={32} className="animate-spin text-indigo-600 mb-4" />
-              <p className="text-sm font-bold text-slate-500 animate-pulse">Analyzing manufacturing trends and OTIF patterns...</p>
+              <Loader2 size={32} className="animate-spin text-primary-accent mb-4 opacity-50" />
+              <p className="text-xs font-mono font-bold text-slate-500 animate-pulse uppercase tracking-widest">Querying Neural Engine...</p>
             </motion.div>
           ) : (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="space-y-8"
             >
-              <div className="bg-primary-accent/5 dark:bg-primary-accent/5 p-4 rounded-xl border border-primary-accent/10 dark:border-primary-accent/10">
-                <p className="text-sm text-primary-text dark:text-primary-text-dark leading-relaxed italic">
+              <div className="bg-primary-accent/5 dark:bg-primary-accent/5 p-5 rounded-xl border border-primary-accent/10 dark:border-primary-accent/10">
+                <p className="text-sm text-primary-text dark:text-primary-text-dark leading-relaxed font-serif italic opacity-90">
                   "{insights.summary}"
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-2 mb-4 border-b border-slate-50 dark:border-slate-800 pb-2">
                     <Lightbulb size={14} className="text-warning" />
-                    <h4 className="text-[11px] font-black text-primary-text dark:text-primary-text-dark uppercase tracking-wider">Growth Recommendations</h4>
+                    <h4 className="text-[10px] font-bold text-primary-text dark:text-primary-text-dark uppercase tracking-widest">Optimizations</h4>
                   </div>
-                  <ul className="space-y-3">
+                  <ul className="space-y-4">
                     {insights.recommendations.map((rec, i) => (
                       <li key={i} className="flex gap-3 text-xs text-secondary-text dark:text-secondary-text-dark group">
-                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-page-bg dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-primary-accent group-hover:bg-primary-accent group-hover:text-white transition-colors">{i + 1}</span>
-                        <span className="pt-0.5">{rec}</span>
+                        <span className="flex-shrink-0 w-5 h-5 rounded-md bg-page-bg dark:bg-slate-800 flex items-center justify-center text-[9px] font-mono font-bold text-primary-accent border border-slate-200 dark:border-slate-700">0{i + 1}</span>
+                        <span className="pt-0.5 leading-relaxed">{rec}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
                 <div>
-                  <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-2 mb-4 border-b border-slate-50 dark:border-slate-800 pb-2">
                     <AlertTriangle size={14} className="text-danger" />
-                    <h4 className="text-[11px] font-black text-primary-text dark:text-primary-text-dark uppercase tracking-wider">Identified Risk Areas</h4>
+                    <h4 className="text-[10px] font-bold text-primary-text dark:text-primary-text-dark uppercase tracking-widest">Anomaly Detection</h4>
                   </div>
                   <div className="space-y-3">
                     {insights.risks.map((risk, i) => (
-                      <div key={i} className="p-3 rounded-lg bg-page-bg dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
+                      <div key={i} className="p-3 rounded-lg bg-page-bg dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 flex items-start gap-3 group hover:border-danger/20 transition-colors">
                         <div className="w-1 mt-1.5 h-1 rounded-full bg-danger flex-shrink-0" />
-                        <p className="text-xs text-secondary-text dark:text-secondary-text-dark">{risk}</p>
+                        <p className="text-xs text-secondary-text dark:text-secondary-text-dark leading-relaxed font-medium">{risk}</p>
                       </div>
                     ))}
                   </div>
@@ -125,5 +125,6 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ data }) => {
     </div>
   );
 };
+
 
 export default AIInsightsPanel;

@@ -147,17 +147,48 @@ export const validateSalesData = (json: any[][]): ValidationResult => {
     
     try {
       if (bDate instanceof Date) {
-        billingDateStr = bDate.toISOString().split('T')[0];
+        // Use local component methods to avoid UTC shift
+        const y = bDate.getFullYear();
+        const m = String(bDate.getMonth() + 1).padStart(2, '0');
+        const d = String(bDate.getDate()).padStart(2, '0');
+        billingDateStr = `${y}-${m}-${d}`;
       } else if (typeof bDate === 'number') {
         const dt = XLSX.SSF.parse_date_code(bDate);
         billingDateStr = `${dt.y}-${String(dt.m).padStart(2, '0')}-${String(dt.d).padStart(2, '0')}`;
       } else if (bDate) {
+        // Try to parse string formats
         const d = new Date(bDate);
         if (isNaN(d.getTime())) throw new Error("Invalid format");
-        billingDateStr = d.toISOString().split('T')[0];
+        
+        // If it looks like ISO (YYYY-MM-DD), it's UTC by default, 
+        // but for others it might be local. To be safe, we parse manually if possible
+        // or just use the local components if we have a valid date object.
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        billingDateStr = `${year}-${month}-${day}`;
       }
     } catch (e) {
       errors.push({ row: rowNum, column: 'Billing Date', message: 'Invalid date format.', value: bDate });
+    }
+
+    // Product and Order type normalization
+    let prodRaw = String(row[COL_MAP.prodNPD] || '').trim().toLowerCase();
+    let productType = 'Produ';
+    if (prodRaw.includes('npd') || prodRaw.includes('new')) {
+      productType = 'NPD';
+    } else if (prodRaw.includes('prod') || prodRaw.includes('reg') || prodRaw.includes('production')) {
+      productType = 'Produ';
+    }
+
+    let orderRaw = String(row[COL_MAP.schPO] || '').trim().toUpperCase();
+    let orderType = 'PO';
+    if (orderRaw.includes('SCH') || orderRaw.includes('SCHEDULE')) {
+      orderType = 'SCH';
+    } else if (orderRaw.includes('PO') || orderRaw.includes('PURCHASE')) {
+      orderType = 'PO';
+    } else if (orderRaw.includes('IU') || orderRaw.includes('INTERNAL')) {
+      orderType = 'IU';
     }
 
     if (true) {
@@ -170,8 +201,8 @@ export const validateSalesData = (json: any[][]): ValidationResult => {
         quantity: parseInt(String(row[COL_MAP.qty] || 0)) || 0,
         onTime: isNaN(onTime) ? 0 : onTime,
         failure: isNaN(failure) ? 0 : failure,
-        productType: String(row[COL_MAP.prodNPD] || 'Produ').trim(),
-        orderType: String(row[COL_MAP.schPO] || 'PO').trim(),
+        productType,
+        orderType,
         billingDate: billingDateStr || new Date().toISOString().split('T')[0],
         material: String(row[COL_MAP.material] || '').trim(),
         accountManager: String(COL_MAP.accMgr !== -1 ? (row[COL_MAP.accMgr] || 'Unassigned') : 'Unassigned').trim(),

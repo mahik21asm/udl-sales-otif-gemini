@@ -97,19 +97,19 @@ export const validateSalesData = (json: any[][]): ValidationResult => {
   }
 
   const COL_MAP = {
-    plant: getCol("Location Code", "Plant", "Site", "Unit"),
-    customer: getCol("Sold-To-Party", "Customer Name", "Customer", "Client"),
-    segment: getCol("Segment Description", "Segment", "Sector"),
-    invType: getCol("Invoice description", "Invoice Type", "Doc Type"),
-    salesL: getCol("Sales Value in Lacs", "Sales Value", "Value", "Amount", "Revenue"),
-    qty: getCol("Quantity", "Qty", "Volume"),
-    onTime: getCol("On Time", "OT count", "OT"),
-    fail: getCol("Failure", "Fail count", "Failure Count"),
-    prodNPD: getCol("Prod/NPD", "Prod"),
-    schPO: getCol("Sch/PO", "Order Type"),
-    billDate: getCol("Billing Date", "Date", "Invoice Date"),
-    material: getCol("Material Description", "Material", "Product"),
-    accMgr: getCol("Account Manager", "Sales Rep", "Sales Person", "AM", "Owner")
+    plant: getCol("Location Code", "Plant", "Site", "Unit", "Location"),
+    customer: getCol("Sold-To-Party", "Customer Name", "Customer", "Client", "Party"),
+    segment: getCol("Segment Description", "Segment", "Sector", "Industry", "SBU"),
+    invType: getCol("Invoice description", "Invoice Type", "Doc Type", "Billing Type", "Invoice Type"),
+    salesL: getCol("Sales Value in Lacs", "Sales Value", "Value", "Amount", "Revenue", "INR"),
+    qty: getCol("Quantity", "Qty", "Volume", "Weight"),
+    onTime: getCol("On Time", "OT count", "OT", "On-Time"),
+    fail: getCol("Failure", "Fail count", "Failure Count", "Variance", "Delay"),
+    prodNPD: getCol("Prod/NPD", "Prod", "Product Type", "Category", "New Product"),
+    schPO: getCol("Sch/PO", "Order Type", "Purchase Order", "Sales Order Type"),
+    billDate: getCol("Billing Date", "Date", "Invoice Date", "Period", "Billing"),
+    material: getCol("Material Description", "Material", "Product", "Item Description", "SKU"),
+    accMgr: getCol("Account Manager", "Sales Rep", "Sales Person", "AM", "Owner", "Account Manager")
   };
 
   // 2. Row-level Validation
@@ -120,7 +120,12 @@ export const validateSalesData = (json: any[][]): ValidationResult => {
     if (row.every(cell => cell === null || cell === undefined || cell === '')) return;
 
     const plantRaw = String(row[COL_MAP.plant] || '').trim().toUpperCase();
-    let plant: 'INFA' | 'INFB' = plantRaw.includes('B') ? 'INFB' : 'INFA';
+    let plant: string = 'INFA';
+    if (plantRaw.includes('INFB') || plantRaw.includes('B') || plantRaw.includes('MANECK') || plantRaw.includes('UNIT 2')) {
+      plant = 'INFB';
+    } else if (plantRaw.includes('INFA') || plantRaw.includes('A') || plantRaw.includes('NASHIK') || plantRaw.includes('UNIT 1')) {
+      plant = 'INFA';
+    }
     
     // Sales Value validation
     let salesVal = parseFloat(String(row[COL_MAP.salesL] || '0').replace(/,/g, ''));

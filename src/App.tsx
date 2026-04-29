@@ -37,6 +37,17 @@ export default function App() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+
+  const updateLastRefreshed = () => {
+    setLastUpdated(new Date().toLocaleString('en-IN', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: true 
+    }));
+  };
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('darkMode') === 'true';
@@ -62,15 +73,7 @@ export default function App() {
           if (dbRecords && dbRecords.length > 0) {
             setRecords(dbRecords);
             setIsLiveData(true);
-            setLastUpdated(new Date().toLocaleString('en-IN', { 
-              day: '2-digit', 
-              month: 'short', 
-              year: 'numeric', 
-              hour: '2-digit', 
-              minute: '2-digit', 
-              second: '2-digit',
-              hour12: true 
-            }));
+            updateLastRefreshed();
             setUploadStatus({
               type: 'success',
               message: `✅ Sync Active: ${dbRecords.length.toLocaleString()} records in cloud`
@@ -133,31 +136,10 @@ export default function App() {
 
   const { filtered, kpis, chartData, aggregatedTableData } = useDashboardData(records, filters);
 
-  useEffect(() => {
-    if (isLiveData && !lastUpdated) {
-      setLastUpdated(new Date().toLocaleString('en-IN', { 
-        day: '2-digit', 
-        month: 'short', 
-        year: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        hour12: true 
-      }));
-    }
-  }, [isLiveData, lastUpdated]);
-
   const handleDataLoaded = async (newRecords: SalesRecord[], fileName: string) => {
     setRecords(newRecords);
     setIsLiveData(true);
-    setLastUpdated(new Date().toLocaleString('en-IN', { 
-      day: '2-digit', 
-      month: 'short', 
-      year: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit',
-      hour12: true 
-    }));
+    updateLastRefreshed();
 
     if (user) {
       try {
@@ -267,6 +249,10 @@ export default function App() {
         darkMode={darkMode}
         toggleDarkMode={toggleDarkMode}
         user={user}
+        material={material} setMaterial={setMaterial}
+        productType={productType} setProductType={setProductType}
+        orderType={orderType} setOrderType={setOrderType}
+        isSto={isSto} setIsSto={setIsSto}
       />
 
       <UploadBanner 

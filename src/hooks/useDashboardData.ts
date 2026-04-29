@@ -11,6 +11,10 @@ export function useDashboardData(
     accMgr: string;
     dateFrom: string;
     dateTo: string;
+    material: string;
+    productType: string;
+    orderType: string;
+    isSto: boolean | null;
   }
 ) {
   const filtered = useMemo(() => {
@@ -21,11 +25,21 @@ export function useDashboardData(
       const matchSeg = filters.segment === 'ALL' || r.segment === filters.segment;
       const matchCust = filters.customer === 'ALL' || r.customer === filters.customer;
       const matchAcc = filters.accMgr === 'ALL' || r.accountManager === filters.accMgr;
+      const matchMat = filters.material === 'ALL' || r.material === filters.material;
+      const matchProd = filters.productType === 'ALL' || r.productType === filters.productType;
+      const matchOrder = filters.orderType === 'ALL' || r.orderType === filters.orderType;
+      
+      let matchSto = true;
+      if (filters.isSto !== null) {
+        const isStoRecord = r.invoiceType.includes('STO');
+        matchSto = isStoRecord === filters.isSto;
+      }
+
       const rDate = r.billingDate;
       const matchDateFrom = !filters.dateFrom || rDate >= filters.dateFrom;
       const matchDateTo = !filters.dateTo || rDate <= filters.dateTo;
       
-      return matchPlant && matchInv && matchSeg && matchCust && matchAcc && matchDateFrom && matchDateTo;
+      return matchPlant && matchInv && matchSeg && matchCust && matchAcc && matchMat && matchProd && matchOrder && matchSto && matchDateFrom && matchDateTo;
     });
   }, [records, filters]);
 
@@ -48,7 +62,17 @@ export function useDashboardData(
       const matchSeg = filters.segment === 'ALL' || r.segment === filters.segment;
       const matchCust = filters.customer === 'ALL' || r.customer === filters.customer;
       const matchAcc = filters.accMgr === 'ALL' || r.accountManager === filters.accMgr;
-      return matchPlant && matchInv && matchSeg && matchCust && matchAcc && r.billingDate >= pStartStr && r.billingDate <= pEndStr;
+      const matchMat = filters.material === 'ALL' || r.material === filters.material;
+      const matchProd = filters.productType === 'ALL' || r.productType === filters.productType;
+      const matchOrder = filters.orderType === 'ALL' || r.orderType === filters.orderType;
+
+      let matchSto = true;
+      if (filters.isSto !== null) {
+        const isStoRecord = r.invoiceType.includes('STO');
+        matchSto = isStoRecord === filters.isSto;
+      }
+
+      return matchPlant && matchInv && matchSeg && matchCust && matchAcc && matchMat && matchProd && matchOrder && matchSto && r.billingDate >= pStartStr && r.billingDate <= pEndStr;
     });
   }, [records, filters]);
 

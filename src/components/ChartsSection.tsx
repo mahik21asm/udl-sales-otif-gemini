@@ -126,6 +126,18 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
     responsive: true,
     maintainAspectRatio: false,
     interaction: { mode: 'index' as const, intersect: false },
+    onHover: (event: any, chartElement: any) => {
+      (event.native?.target as HTMLElement).style.cursor = chartElement.length ? 'pointer' : 'default';
+    },
+    onClick: (e: any, elements: any) => {
+      if (elements.length > 0) {
+        const datasetIndex = elements[0].datasetIndex;
+        const label = dailyDataConfig.datasets[datasetIndex].label;
+        if (label === 'INFA' || label === 'INFB') {
+          onDrillDown('plant', label);
+        }
+      }
+    },
     plugins: {
       legend: { position: 'top' as const, labels: { usePointStyle: true, padding: 14, font: { size: 10, weight: 'bold' }, color: textColor } },
       tooltip: { 
@@ -157,7 +169,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <ChartCard 
           title="Daily Sales Trend — INFA vs INFB (₹ Lacs)" 
-          subtitle="Stacked bar view"
+          subtitle="Click bars to filter plant"
           className="lg:col-span-2"
         >
           <div key={`daily-${renderKey}`} className="h-full">
@@ -165,7 +177,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           </div>
         </ChartCard>
         
-        <ChartCard title="Sales by Segment" subtitle="Click to filter">
+        <ChartCard title="Sales by Segment" subtitle="Click segment to filter">
           <div key={`segment-${renderKey}`} className="h-full flex items-center justify-center">
             <Doughnut 
               data={{
@@ -209,7 +221,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           </div>
         </ChartCard>
 
-        <ChartCard title="Revenue Split" subtitle="STO vs External">
+        <ChartCard title="Revenue Split" subtitle="Click slice to filter">
           <div key={`split-${renderKey}`} className="h-full flex items-center justify-center">
             <Doughnut 
               data={{
@@ -224,9 +236,29 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
               options={{
                 responsive: true, maintainAspectRatio: false,
                 cutout: '65%',
+                onHover: (event, chartElement) => {
+                  (event.native?.target as HTMLElement).style.cursor = chartElement.length ? 'pointer' : 'default';
+                },
+                onClick: (e, elements) => {
+                  if (elements.length > 0) {
+                    const idx = elements[0].index;
+                    const label = splitData.labels[idx];
+                    onDrillDown('isSto', label.includes('STO'));
+                  }
+                },
                 plugins: {
                   legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 9, weight: 'bold' }, color: textColor } },
-                  tooltip: { backgroundColor: '#1e293b' }
+                  tooltip: { 
+                    backgroundColor: '#1e293b',
+                    padding: 10,
+                    cornerRadius: 8,
+                    callbacks: {
+                      label: (c: any) => {
+                        const total = splitData.data.reduce((a, b) => a + b, 0);
+                        return ` ₹${c.parsed.toFixed(2)}L (${((c.parsed / total) * 100).toFixed(1)}%)`;
+                      }
+                    }
+                  }
                 }
               }}
             />
@@ -257,7 +289,13 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
                   onDrillDown('accMgr', accMgrData.labels[idx]);
                 }
               },
-              plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1e293b' } },
+              plugins: { 
+                legend: { display: false }, 
+                tooltip: { 
+                  backgroundColor: '#1e293b',
+                  callbacks: { label: (c: any) => ` ₹${c.parsed.y.toFixed(2)}L` }
+                } 
+              },
               scales: { x: { grid: { display: false }, ticks: { font: { size: 9 }, color: textColor } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { font: { size: 9 }, color: textColor } } }
             }}
           />
@@ -281,7 +319,10 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
               },
               plugins: { 
                 legend: { position: 'top', labels: { usePointStyle: true, font: { size: 9, weight: 'bold' }, color: textColor } },
-                tooltip: { backgroundColor: '#1e293b' }
+                tooltip: { 
+                  backgroundColor: '#1e293b',
+                  callbacks: { label: (c: any) => ` ${c.dataset.label}: ${c.dataset.type === 'line' ? c.parsed.y.toFixed(1) + '%' : c.parsed.y + ' failures'}` }
+                }
               },
               scales: { 
                 x: { grid: { display: false }, ticks: { font: { size: 8 }, color: textColor } }, 
@@ -324,30 +365,56 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           />
           </div>
         </ChartCard>
-        <ChartCard title="Product Type — Prod vs NPD" subtitle="₹ Lacs by plant">
+        <ChartCard title="Product Type — Prod vs NPD" subtitle="Click bars to filter">
            <div key={`prodnpd-${renderKey}`} className="h-full">
              <Bar 
               data={prodNpdData}
             options={{
               responsive: true, maintainAspectRatio: false,
+              onHover: (event, chartElement) => {
+                (event.native?.target as HTMLElement).style.cursor = chartElement.length ? 'pointer' : 'default';
+              },
+              onClick: (e, elements) => {
+                if (elements.length > 0) {
+                  const datasetIndex = elements[0].datasetIndex;
+                  const label = prodNpdData.datasets[datasetIndex].label;
+                  onDrillDown('productType', label === 'Production' ? 'Produ' : label);
+                }
+              },
               plugins: { 
                 legend: { position: 'top', labels: { usePointStyle: true, font: { size: 9, weight: 'bold' }, color: textColor } },
-                tooltip: { backgroundColor: '#1e293b' }
+                tooltip: { 
+                  backgroundColor: '#1e293b',
+                  callbacks: { label: (c: any) => ` ${c.dataset.label}: ₹${c.parsed.y.toFixed(2)}L` }
+                }
               },
               scales: { x: { grid: { display: false }, ticks: { color: textColor, font: { size: 9 } } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { callback: (v: any) => `₹${v}L`, font: { size: 9 }, color: textColor } } }
             }}
           />
           </div>
         </ChartCard>
-        <ChartCard title="Order Type — SCH / PO / IU" subtitle="₹ Lacs by plant">
+        <ChartCard title="Order Type — SCH / PO / IU" subtitle="Click bars to filter">
            <div key={`ordtype-${renderKey}`} className="h-full">
              <Bar 
               data={schPoData}
             options={{
               responsive: true, maintainAspectRatio: false,
+              onHover: (event, chartElement) => {
+                (event.native?.target as HTMLElement).style.cursor = chartElement.length ? 'pointer' : 'default';
+              },
+              onClick: (e, elements) => {
+                if (elements.length > 0) {
+                  const datasetIndex = elements[0].datasetIndex;
+                  const label = schPoData.datasets[datasetIndex].label;
+                  onDrillDown('orderType', label);
+                }
+              },
               plugins: { 
                 legend: { position: 'top', labels: { usePointStyle: true, font: { size: 9, weight: 'bold' }, color: textColor } },
-                tooltip: { backgroundColor: '#1e293b' }
+                tooltip: { 
+                  backgroundColor: '#1e293b',
+                  callbacks: { label: (c: any) => ` ${c.dataset.label}: ₹${c.parsed.y.toFixed(2)}L` }
+                }
               },
               scales: { x: { grid: { display: false }, ticks: { color: textColor, font: { size: 9 } } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { callback: (v: any) => `₹${v}L`, font: { size: 9 }, color: textColor } } }
             }}
@@ -386,7 +453,10 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
               indexAxis: 'y',
               plugins: { 
                 legend: { display: false }, 
-                tooltip: { backgroundColor: '#1e293b' } 
+                tooltip: { 
+                  backgroundColor: '#1e293b',
+                  callbacks: { label: (c: any) => ` ₹${c.parsed.x.toFixed(2)}L` }
+                } 
               },
               scales: { 
                 x: { beginAtZero: true, grid: { color: gridColor }, ticks: { font: { size: 9 }, color: textColor } }, 
@@ -396,7 +466,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           />
           </div>
         </ChartCard>
-        <ChartCard title="Top 10 Materials by Sales Value" subtitle="₹ Lacs — filtered view">
+        <ChartCard title="Top 10 Materials by Sales Value" subtitle="Click material to filter">
           <div key={`mat-${renderKey}`} className="h-full">
             <Bar 
               data={{
@@ -413,9 +483,21 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
             options={{
               responsive: true, maintainAspectRatio: false,
               indexAxis: 'y',
+              onHover: (event, chartElement) => {
+                (event.native?.target as HTMLElement).style.cursor = chartElement.length ? 'pointer' : 'default';
+              },
+              onClick: (e, elements) => {
+                if (elements.length > 0) {
+                  const idx = elements[0].index;
+                  onDrillDown('material', topMatData.labels[idx]);
+                }
+              },
               plugins: { 
                 legend: { display: false },
-                tooltip: { backgroundColor: '#1e293b' }
+                tooltip: { 
+                  backgroundColor: '#1e293b',
+                  callbacks: { label: (c: any) => ` ₹${c.parsed.x.toFixed(2)}L` }
+                }
               },
               scales: { 
                 x: { beginAtZero: true, grid: { color: gridColor }, ticks: { font: { size: 9 }, color: textColor } }, 

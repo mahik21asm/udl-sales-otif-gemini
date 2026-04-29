@@ -30,6 +30,10 @@ export default function App() {
   const [segment, setSegment] = useState('ALL');
   const [customer, setCustomer] = useState('ALL');
   const [accMgr, setAccMgr] = useState('ALL');
+  const [material, setMaterial] = useState('ALL');
+  const [productType, setProductType] = useState('ALL');
+  const [orderType, setOrderType] = useState('ALL');
+  const [isSto, setIsSto] = useState<boolean | null>(null);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -58,6 +62,15 @@ export default function App() {
           if (dbRecords && dbRecords.length > 0) {
             setRecords(dbRecords);
             setIsLiveData(true);
+            setLastUpdated(new Date().toLocaleString('en-IN', { 
+              day: '2-digit', 
+              month: 'short', 
+              year: 'numeric', 
+              hour: '2-digit', 
+              minute: '2-digit', 
+              second: '2-digit',
+              hour12: true 
+            }));
             setUploadStatus({
               type: 'success',
               message: `✅ Sync Active: ${dbRecords.length.toLocaleString()} records in cloud`
@@ -115,10 +128,23 @@ export default function App() {
   }, [records]);
 
   const filters = useMemo(() => ({
-    plant, invType, segment, customer, accMgr, dateFrom, dateTo
-  }), [plant, invType, segment, customer, accMgr, dateFrom, dateTo]);
+    plant, invType, segment, customer, accMgr, dateFrom, dateTo, material, productType, orderType, isSto
+  }), [plant, invType, segment, customer, accMgr, dateFrom, dateTo, material, productType, orderType, isSto]);
 
   const { filtered, kpis, chartData, aggregatedTableData } = useDashboardData(records, filters);
+
+  useEffect(() => {
+    if (isLiveData && !lastUpdated) {
+      setLastUpdated(new Date().toLocaleString('en-IN', { 
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: true 
+      }));
+    }
+  }, [isLiveData, lastUpdated]);
 
   const handleDataLoaded = async (newRecords: SalesRecord[], fileName: string) => {
     setRecords(newRecords);
@@ -200,15 +226,24 @@ export default function App() {
     setSegment('ALL');
     setCustomer('ALL');
     setAccMgr('ALL');
+    setMaterial('ALL');
+    setProductType('ALL');
+    setOrderType('ALL');
+    setIsSto(null);
     setDateFrom('');
     setDateTo('');
   };
 
-  const handleChartDrillDown = (type: string, value: string) => {
+  const handleChartDrillDown = (type: string, value: any) => {
     if (type === 'segment') setSegment(value);
     if (type === 'customer') setCustomer(value);
     if (type === 'accMgr') setAccMgr(value);
     if (type === 'invType') setInvType(value);
+    if (type === 'plant') setPlant(value);
+    if (type === 'material') setMaterial(value);
+    if (type === 'productType') setProductType(value);
+    if (type === 'orderType') setOrderType(value);
+    if (type === 'isSto') setIsSto(value);
   };
 
   return (

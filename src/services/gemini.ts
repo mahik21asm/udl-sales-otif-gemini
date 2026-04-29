@@ -9,7 +9,7 @@ export interface DashboardInsights {
 }
 
 export async function getDashboardInsights(data: any): Promise<DashboardInsights> {
-  const model = "gemini-3-flash-preview";
+  const modelName = "gemini-3-flash-preview";
   
   const prompt = `
     You are a senior business analyst reviewing a manufacturing sales dashboard.
@@ -31,7 +31,7 @@ export async function getDashboardInsights(data: any): Promise<DashboardInsights
     FAILURE PARETO (Top Customers):
     ${data.chartData.paretoData.labels.map((l: string, i: number) => `- ${l}: ${data.chartData.paretoData.datasets[0].data[i]} failures`).join('\n')}
 
-    Please return your response in JSON format with the following structure:
+    Please return your response in JSON format (pure JSON, no markdown blocks) with the following structure:
     {
       "summary": "A 2-3 sentence overview of current performance.",
       "recommendations": ["4 specific, actionable business recommendations"],
@@ -43,18 +43,20 @@ export async function getDashboardInsights(data: any): Promise<DashboardInsights
 
   try {
     const response = await ai.models.generateContent({
-      model,
+      model: modelName,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
       }
     });
 
-    const result = JSON.parse(response.text || '{}');
+    const text = response.text || '{}';
+    const insights = JSON.parse(text);
+    
     return {
-      summary: result.summary || "Unable to generate summary.",
-      recommendations: result.recommendations || [],
-      risks: result.risks || []
+      summary: insights.summary || "Unable to generate summary.",
+      recommendations: insights.recommendations || [],
+      risks: insights.risks || []
     };
   } catch (error) {
     console.error("Gemini API Error:", error);

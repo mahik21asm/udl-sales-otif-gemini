@@ -19,7 +19,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLiveData, setIsLiveData] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState<{ type: 'neutral' | 'success' | 'error', message: string }>({
+  const [uploadStatus, setUploadStatus] = useState<{ type: 'neutral' | 'success' | 'error' | 'loading', message: string }>({
     type: 'neutral',
     message: 'Welcome: UDL Sales Dashboard. Upload data or log in to view cloud records.'
   });

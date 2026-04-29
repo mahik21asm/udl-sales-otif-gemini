@@ -47,7 +47,7 @@ export const getGeminiResponse = async (prompt: string, records: SalesRecord[] =
       }
     });
 
-    return response.text;
+    return response.text || "Sorry, I couldn't generate a response.";
   } catch (error) {
     console.error("Gemini Error:", error);
     return "Sorry, I encountered an error while processing your request.";

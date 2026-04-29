@@ -8,7 +8,7 @@ import { validateSalesData, ValidationError } from '../services/dataValidator';
 interface UploadBannerProps {
   onDataLoaded: (data: SalesRecord[], fileName: string) => void;
   onReset: () => void;
-  status: { type: 'neutral' | 'success' | 'error'; message: string };
+  status: { type: 'neutral' | 'success' | 'error' | 'loading'; message: string };
 }
 
 const UploadBanner: React.FC<UploadBannerProps> = ({ onDataLoaded, onReset, status }) => {
@@ -187,11 +187,14 @@ const UploadBanner: React.FC<UploadBannerProps> = ({ onDataLoaded, onReset, stat
                <div className={cn("w-2.5 h-2.5 rounded-full", 
                 status.type === 'success' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.7)]" : 
                 status.type === 'error' ? "bg-danger shadow-[0_0_12px_rgba(220,53,69,0.7)]" : 
+                status.type === 'loading' ? "bg-primary-accent animate-pulse shadow-[0_0_12px_rgba(37,99,235,0.7)]" :
                 validationErrors.length > 0 ? "bg-danger" : "bg-slate-400"
               )} />
               <span className={cn("text-[13px] font-extrabold tracking-tight", 
                 status.type === 'success' ? "text-emerald-700 dark:text-emerald-400" : 
-                status.type === 'error' || validationErrors.length > 0 ? "text-danger dark:text-rose-400" : "text-secondary-text dark:text-secondary-text-dark"
+                status.type === 'error' || validationErrors.length > 0 ? "text-danger dark:text-rose-400" : 
+                status.type === 'loading' ? "text-primary-accent dark:text-primary-accent-dark" :
+                "text-secondary-text dark:text-secondary-text-dark"
               )}>
                 {validationErrors.length > 0 ? "Validation Failed" : status.message}
               </span>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { cn, formatNumber } from '../lib/utils';
+import { cn, formatNumber, formatCurrency } from '../lib/utils';
 import { Maximize2 } from 'lucide-react';
 
 interface KPIProps {
@@ -34,8 +34,8 @@ const KPICard: React.FC<KPIProps> = ({ label, value, subValue, type, delta, onZo
           <div className="text-[10px] text-secondary-text dark:text-secondary-text-dark font-bold uppercase tracking-[0.12em] opacity-60">
             {label}
           </div>
-          <div className="text-[8px] font-mono text-slate-400 opacity-40 italic tracking-tighter">
-            SYS_RT_{type.toUpperCase()}
+          <div className="text-[8px] font-mono text-slate-400 opacity-40 italic tracking-tighter uppercase">
+            Real-time Update
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -131,24 +131,24 @@ const KPISection: React.FC<KPISectionProps> = ({
       <KPICard
         type="total"
         label="Total Sales Value"
-        value={`₹ ${formatNumber(totalSales)}`}
+        value={formatCurrency(totalSales)}
         subValue="₹ Lacs"
         delta={deltas?.sales}
-        onZoom={() => onZoom({ type: 'total', label: 'Total Sales Value', value: `₹ ${formatNumber(totalSales)}`, subValue: '₹ Lacs', delta: deltas?.sales })}
+        onZoom={() => onZoom({ type: 'total', label: 'Total Sales Value', value: formatCurrency(totalSales), subValue: '₹ Lacs', delta: deltas?.sales })}
       />
       <KPICard
         type="infa"
         label="INFA — UDL Nashik"
-        value={`₹ ${formatNumber(infaSales)}`}
+        value={formatCurrency(infaSales)}
         subValue={`${totalSales > 0 ? ((infaSales / totalSales) * 100).toFixed(1) : 0}% of total`}
-        onZoom={() => onZoom({ type: 'infa', label: 'INFA — UDL Nashik', value: `₹ ${formatNumber(infaSales)}`, subValue: `${totalSales > 0 ? ((infaSales / totalSales) * 100).toFixed(1) : 0}% of total` })}
+        onZoom={() => onZoom({ type: 'infa', label: 'INFA — UDL Nashik', value: formatCurrency(infaSales), subValue: `${totalSales > 0 ? ((infaSales / totalSales) * 100).toFixed(1) : 0}% of total` })}
       />
       <KPICard
         type="infb"
         label="INFB — Maneck Nagar"
-        value={`₹ ${formatNumber(infbSales)}`}
+        value={formatCurrency(infbSales)}
         subValue={`${totalSales > 0 ? ((infbSales / totalSales) * 100).toFixed(1) : 0}% of total`}
-        onZoom={() => onZoom({ type: 'infb', label: 'INFB — Maneck Nagar', value: `₹ ${formatNumber(infbSales)}`, subValue: `${totalSales > 0 ? ((infbSales / totalSales) * 100).toFixed(1) : 0}% of total` })}
+        onZoom={() => onZoom({ type: 'infb', label: 'INFB — Maneck Nagar', value: formatCurrency(infbSales), subValue: `${totalSales > 0 ? ((infbSales / totalSales) * 100).toFixed(1) : 0}% of total` })}
       />
       <KPICard
         type="otif"

@@ -6,8 +6,19 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatNumber(v: number) {
-  if (Math.abs(v) >= 100) return v.toFixed(1);
-  return v.toFixed(2);
+  if (v === undefined || v === null) return '0';
+  return v.toLocaleString('en-IN', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1
+  });
+}
+
+export function formatCurrency(v: number) {
+  if (v === undefined || v === null) return '₹0.0';
+  return '₹' + v.toLocaleString('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
 export function formatDate(date: string | Date) {

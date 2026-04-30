@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Header from './components/Header';
+import LoginPage from './components/LoginPage';
 import UploadBanner from './components/UploadBanner';
 import KPISection from './components/KPISection';
 import OTIFPanel from './components/OTIFPanel';
@@ -96,13 +97,13 @@ export default function App() {
           setIsLoading(false);
         });
       } else {
-        // Logged out - show sample data as demo
+        // Logged out - restrict access
         setIsLoading(false);
-        setRecords(SAMPLE_RAW);
+        setRecords([]);
         setIsLiveData(false);
         setUploadStatus({
           type: 'neutral',
-          message: 'Demo Mode: Showing Sample Sales Data. Login to use private cloud storage.'
+          message: 'Authentication Required: Please login to view metrics.'
         });
       }
     });
@@ -128,6 +129,10 @@ export default function App() {
   const segments = useMemo(() => [...new Set((records || []).map(r => r.segment))].filter(Boolean).sort(), [records]);
   const customers = useMemo(() => [...new Set((records || []).map(r => r.customer))].filter(Boolean).sort(), [records]);
   const accMgrs = useMemo(() => [...new Set((records || []).map(r => r.accountManager))].filter(Boolean).sort(), [records]);
+  const invTypes = useMemo(() => [...new Set((records || []).map(r => r.invoiceType))].filter(Boolean).sort(), [records]);
+  const materials = useMemo(() => [...new Set((records || []).map(r => r.material))].filter(Boolean).sort(), [records]);
+  const productTypes = useMemo(() => [...new Set((records || []).map(r => r.productType))].filter(Boolean).sort(), [records]);
+  const orderTypes = useMemo(() => [...new Set((records || []).map(r => r.orderType))].filter(Boolean).sort(), [records]);
   const dateBounds = useMemo(() => {
     const dates = (records || []).map(r => r.billingDate).filter(Boolean).sort();
     return {
@@ -176,20 +181,27 @@ export default function App() {
 
   const handleReset = async () => {
     if (user && isLiveData) {
-      if (confirm("Clear persistent cloud data and return to sample?")) {
+      if (confirm("Clear persistent cloud data and start fresh?")) {
         try {
           await clearSalesRecords();
+          setRecords([]);
+          setIsLiveData(false);
+          setUploadStatus({
+            type: 'neutral',
+            message: 'Workspace cleared. Upload data to begin.'
+          });
         } catch (err: any) {
           console.error(err);
         }
       }
+    } else {
+      setRecords([]);
+      setIsLiveData(false);
+      setUploadStatus({
+        type: 'neutral',
+        message: 'Workspace cleared.'
+      });
     }
-    setRecords(SAMPLE_RAW);
-    setIsLiveData(false);
-    setUploadStatus({
-      type: 'neutral',
-      message: 'Loaded: Sample Sales Register Data · Apr 2026'
-    });
     handleResetFilters();
   };
 
@@ -235,6 +247,21 @@ export default function App() {
   };
 
   // Dashboard Application Entry Point - Production Build
+  if (isLoading && !user) {
+    return (
+      <div className="min-h-screen bg-page-bg dark:bg-page-bg-dark flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary-accent border-t-transparent rounded-full animate-spin" />
+          <p className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest animate-pulse">Initializing Security Protocol...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage isLoadingAuth={isLoading} />;
+  }
+
   return (
     <div className="min-h-screen bg-page-bg dark:bg-page-bg-dark font-sans text-primary-text dark:text-primary-text-dark flex flex-col transition-colors duration-300">
       <Header 
@@ -248,6 +275,10 @@ export default function App() {
         segments={segments}
         customers={customers}
         accMgrs={accMgrs}
+        invTypes={invTypes}
+        materials={materials}
+        productTypes={productTypes}
+        orderTypes={orderTypes}
         isLiveData={isLiveData}
         isLoading={isLoading}
         dateBounds={dateBounds}
@@ -380,7 +411,7 @@ export default function App() {
                           </div>
                           <div className="flex justify-between items-center text-xs">
                             <span className="text-slate-500">Source Cluster</span>
-                            <span className="text-slate-400 font-mono">UDL_{zoomedKPI.type.toUpperCase()}_01</span>
+                            <span className="text-slate-400 font-mono">Nashik/Maneck Hub</span>
                           </div>
                         </div>
                       </div>

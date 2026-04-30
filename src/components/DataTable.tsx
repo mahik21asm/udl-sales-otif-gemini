@@ -35,14 +35,14 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
    const headers: { label: string; field: keyof AggregatedData; align?: 'left' | 'right' | 'center' }[] = [
     { label: 'Cluster', field: 'plant' },
     { label: 'Customer Name', field: 'customer' },
-    { label: 'Vertical Segment', field: 'segment' },
+    { label: 'Segment', field: 'segment' },
     { label: 'Account Mgr', field: 'accMgr' },
-    { label: 'Inv_Type', field: 'invType' },
-    { label: 'Rev Lacs', field: 'sales', align: 'right' },
+    { label: 'Type', field: 'invType' },
+    { label: 'Revenue (₹ Lacs)', field: 'sales', align: 'right' },
     { label: 'Quantity', field: 'qty', align: 'right' },
-    { label: 'OTIF_Efficiency', field: 'otif' },
-    { label: 'Success', field: 'onTime', align: 'right' },
-    { label: 'Failure', field: 'fail', align: 'right' },
+    { label: 'OTIF Progress', field: 'otif' },
+    { label: 'On-Time', field: 'onTime', align: 'right' },
+    { label: 'Delayed', field: 'fail', align: 'right' },
   ];
 
   /* Improved styles for Recipe 1: Technical Dashboard */
@@ -75,9 +75,9 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
   return (
     <div id="data-table" className="bg-card-bg dark:bg-card-bg-dark rounded-2xl shadow-[0_1px_4px_rgba(0,0,0,0.02)] border border-slate-200 dark:border-slate-800 overflow-hidden p-0 transition-all duration-300 hover:shadow-2xl">
       <div className="p-8 border-b border-slate-100 dark:border-slate-800">
-        <h3 className="text-sm font-bold text-primary-text dark:text-primary-text-dark tracking-tighter uppercase mb-1">Detailed Log Matrix</h3>
+        <h3 className="text-sm font-bold text-primary-text dark:text-primary-text-dark tracking-tighter uppercase mb-1">Sales Records</h3>
         <p className="text-[10px] text-secondary-text dark:text-secondary-text-dark font-mono font-bold uppercase tracking-[0.2em] opacity-40">
-          UDL_INTELLIGENCE_LAYER_01 &nbsp;•&nbsp; STREAMS_{sortedData.length.toString().padStart(4, '0')}
+          UDL ANALYTICS LAYER &nbsp;•&nbsp; RECORDS_{sortedData.length.toString().padStart(4, '0')}
         </p>
       </div>
 

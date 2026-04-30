@@ -193,12 +193,12 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
       {/* Top Row: Daily Trend, Segment, and Revenue Split */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <ChartCard 
-          title="Daily Sales Trend — INFA vs INFB (₹ Lacs)" 
-          subtitle="Click bars to filter plant"
+          title="Daily Sales Trend" 
+          subtitle="Revenue progression by plant"
           className="lg:col-span-2"
           isLiveData={isLiveData}
           onMaximize={() => onMaximize?.({
-            title: "Daily Sales Trend — INFA vs INFB (₹ Lacs)",
+            title: "Daily Sales Trend — (₹ Lacs)",
             subtitle: "Total revenue progression across time",
             children: <div className="h-96 md:h-[500px]"><Chart type="bar" data={dailyDataConfig as any} options={dailyOptions as any} /></div>
           })}
@@ -209,8 +209,8 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
         </ChartCard>
         
         <ChartCard 
-          title="Sales by Segment" 
-          subtitle="Click segment to filter" 
+          title="Segment Analysis" 
+          subtitle="Business vertical distribution" 
           isLiveData={isLiveData}
           onMaximize={() => onMaximize?.({
             title: "Sales by Segment",
@@ -281,7 +281,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           </div>
         </ChartCard>
 
-        <ChartCard title="Revenue Split" subtitle="Click slice to filter" isLiveData={isLiveData}>
+        <ChartCard title="Revenue Breakdown" subtitle="Distribution of sales types" isLiveData={isLiveData}>
           <div key={`split-${renderKey}`} className="h-full flex items-center justify-center">
             <Doughnut 
               data={{
@@ -327,7 +327,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ChartCard title="Sales by Account Manager" subtitle="₹ Lacs — performance view" isLiveData={isLiveData}>
+        <ChartCard title="Team Performance" subtitle="Revenue by Account Manager" isLiveData={isLiveData}>
           <div key={`mgr-${renderKey}`} className="h-full">
             <Bar 
               data={{
@@ -369,8 +369,8 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           </div>
         </ChartCard>
         <ChartCard 
-          title="Delivery Variance Pareto" 
-          subtitle="Failure count by customer" 
+          title="Top Contributors to Failure" 
+          subtitle="Delivery variances by customer" 
           isLiveData={isLiveData}
           onMaximize={() => onMaximize?.({
             title: "Delivery Variance Pareto",
@@ -464,7 +464,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           />
           </div>
         </ChartCard>
-        <ChartCard title="Product Type — Prod vs NPD" subtitle="Click bars to filter" isLiveData={isLiveData}>
+        <ChartCard title="NPD vs Regular" subtitle="New Product Development Sales" isLiveData={isLiveData}>
            <div key={`prodnpd-${renderKey}`} className="h-full">
              <Bar 
               data={prodNpdData}
@@ -503,7 +503,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           />
           </div>
         </ChartCard>
-        <ChartCard title="Order Type — SCH / PO / IU" subtitle="Click bars to filter" isLiveData={isLiveData}>
+        <ChartCard title="Order Channel Analysis" subtitle="SCH vs PO vs Internal" isLiveData={isLiveData}>
            <div key={`ordtype-${renderKey}`} className="h-full">
              <Bar 
               data={schPoData}
@@ -546,7 +546,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
 
       {/* Bottom Row: Top Customers and Materials */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         <ChartCard title="Top 10 Customers by Sales Value" subtitle="Click customer to filter" isLiveData={isLiveData}>
+         <ChartCard title="Top 10 Customers" subtitle="Revenue by sold-to party" isLiveData={isLiveData}>
           <div key={`cust-${renderKey}`} className="h-full">
             <Bar 
               data={{
@@ -594,7 +594,7 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({
           />
           </div>
         </ChartCard>
-        <ChartCard title="Top 10 Materials by Sales Value" subtitle="Click material to filter" isLiveData={isLiveData}>
+        <ChartCard title="Top 10 Materials" subtitle="High-value product performance" isLiveData={isLiveData}>
           <div key={`mat-${renderKey}`} className="h-full">
             <Bar 
               data={{
@@ -664,7 +664,7 @@ const ChartCard: React.FC<{
 
     {!isLiveData && (
       <div className="absolute top-0 right-0 px-2.5 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[8px] font-mono font-bold uppercase tracking-[0.2em] rounded-bl-xl border-b border-l border-amber-500/20 z-10 transition-opacity group-hover:opacity-100">
-        DEMO_ENV
+        Demo Mode
       </div>
     )}
     <div className="mb-8 flex justify-between items-start relative z-10 border-b border-slate-50 dark:border-slate-800/50 pb-5">

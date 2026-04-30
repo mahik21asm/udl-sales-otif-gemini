@@ -82,9 +82,9 @@ const UploadBanner: React.FC<UploadBannerProps> = ({ onDataLoaded, onReset, stat
           className="flex items-center gap-2 px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 hover:text-primary-accent dark:hover:text-primary-accent-dark transition-all border border-slate-100 dark:border-slate-800 hover:border-primary-accent rounded-lg bg-white dark:bg-slate-900 shadow-sm"
         >
           {isMinimized ? (
-            <><RefreshCw size={12} className="animate-spin-slow" /> EXPAND_CONSOLE</>
+            <><RefreshCw size={12} className="animate-spin-slow" /> EXPAND SETTINGS</>
           ) : (
-            <><EyeOff size={12} /> COLLAPSE_INTERFACE</>
+            <><EyeOff size={12} /> COLLAPSE SETTINGS</>
           )}
         </button>
       </div>
@@ -103,7 +103,7 @@ const UploadBanner: React.FC<UploadBannerProps> = ({ onDataLoaded, onReset, stat
                 <Upload size={18} />
               </div>
               <div className="text-left">
-                <h2 className="text-xs font-black text-slate-900 dark:text-white tracking-widest uppercase mb-0.5">Control Console Minimized</h2>
+                <h2 className="text-xs font-black text-slate-900 dark:text-white tracking-widest uppercase mb-0.5">Settings Minimized</h2>
                 <div className="flex items-center gap-2">
                   <div className={cn("w-1.5 h-1.5 rounded-full", status.type === 'success' ? 'bg-success animate-pulse' : 'bg-primary-accent')} />
                   <p className="text-[10px] text-slate-400 font-mono italic tracking-tight">{status.message}</p>
@@ -116,7 +116,7 @@ const UploadBanner: React.FC<UploadBannerProps> = ({ onDataLoaded, onReset, stat
                 onClick={handleResetWorkspace}
                 className="px-4 py-1.5 text-[10px] font-bold text-slate-400 hover:text-danger hover:bg-danger/10 rounded-lg transition-all border border-transparent hover:border-danger/20 uppercase tracking-widest"
               >
-                SCRUB_ENVIRONMENT
+                CLEAR WORKSPACE
               </button>
             </div>
           </motion.div>
@@ -131,9 +131,9 @@ const UploadBanner: React.FC<UploadBannerProps> = ({ onDataLoaded, onReset, stat
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               <div className="lg:col-span-7 space-y-6">
                 <div>
-                  <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 tracking-tighter">DATA_INGESTION_PORTAL</h2>
+                  <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 tracking-tighter">Sales Data Upload</h2>
                   <p className="text-slate-500 dark:text-slate-400 font-mono text-[11px] leading-relaxed uppercase tracking-wide opacity-80">
-                    Connect legacy SAP/ERP data exports directly to the intelligence layer. Supporting ISO-8601 clusters INFA and INFB.
+                    Upload your SAP/ERP sales registers to generate intelligent insights. Supported plants: Nashik (INFA) and Maneck Nagar (INFB).
                   </p>
                 </div>
 
@@ -156,13 +156,13 @@ const UploadBanner: React.FC<UploadBannerProps> = ({ onDataLoaded, onReset, stat
                     onClick={() => fileInputRef.current?.click()}
                     className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest shadow-xl shadow-slate-900/5 transition-all hover:translate-y-[-1px] active:translate-y-[1px]"
                   >
-                    Select_Payload
+                    Select File
                   </button>
                    <button 
                     onClick={handleResetWorkspace}
                     className="px-6 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest text-slate-400 border border-slate-100 dark:border-slate-800 hover:text-danger hover:border-danger hover:bg-danger/5 transition-all"
                   >
-                    Scrub_All
+                    Clear Board
                   </button>
                 </div>
               </div>
@@ -187,8 +187,8 @@ const UploadBanner: React.FC<UploadBannerProps> = ({ onDataLoaded, onReset, stat
                     <Upload size={32} />
                   </div>
                   <div className="text-center">
-                    <p className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-2">Drag_Drop_File</p>
-                    <p className="text-[9px] text-slate-400 dark:text-slate-500 font-mono italic">XLSX, XLS, CSV | AUTO_PARSE</p>
+                    <p className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-2">Drag & Drop File</p>
+                    <p className="text-[9px] text-slate-400 dark:text-slate-500 font-mono italic">XLSX, XLS, CSV | AUTOMATIC PARSE</p>
                   </div>
                 </div>
               </div>

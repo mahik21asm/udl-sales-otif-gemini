@@ -23,6 +23,13 @@ export const GeminiChat: React.FC<GeminiChatProps> = ({ records }) => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Reset chat when records are cleared
+  useEffect(() => {
+    if (records.length === 0 && messages.length > 1) {
+      setMessages([{ role: 'assistant', content: 'Hello! I am your UDL Data Assistant. Ask me anything about your sales or OTIF metrics.' }]);
+    }
+  }, [records.length]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };

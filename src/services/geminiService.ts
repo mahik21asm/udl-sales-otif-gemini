@@ -1,9 +1,18 @@
 import { GoogleGenAI } from "@google/genai";
 import { SalesRecord } from "../types";
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY as string,
-});
+let genAI: GoogleGenAI | null = null;
+
+function getAI() {
+  if (!genAI) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY environment variable is not set.");
+    }
+    genAI = new GoogleGenAI({ apiKey });
+  }
+  return genAI;
+}
 
 export interface DashboardInsights {
   summary: string;
@@ -46,11 +55,11 @@ export const getGeminiResponse = async (prompt: string, records: SalesRecord[] =
   `;
 
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: [
-        { role: 'user', parts: [{ text: context }] },
-        { role: 'user', parts: [{ text: prompt }] }
+        { role: 'user', parts: [{ text: context }, { text: prompt }] }
       ],
       config: {
         systemInstruction: "You are a professional business analyst for UDL Group. Be concise and helpful.",
@@ -60,7 +69,7 @@ export const getGeminiResponse = async (prompt: string, records: SalesRecord[] =
     return response.text || "I'm sorry, I couldn't generate a response.";
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "Error reaching AI service.";
+    return "Error reaching AI service. Please ensure the Gemini API key is configured correctly.";
   }
 };
 
@@ -82,6 +91,7 @@ export async function getDashboardInsights(data: any): Promise<DashboardInsights
   `;
 
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: prompt,
@@ -98,6 +108,6 @@ export async function getDashboardInsights(data: any): Promise<DashboardInsights
     };
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return { summary: "Insights unavailable.", recommendations: [], risks: [] };
+    return { summary: "Insights unavailable. Please check connectivity or API configuration.", recommendations: [], risks: [] };
   }
 }

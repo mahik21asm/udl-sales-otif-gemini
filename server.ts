@@ -3,27 +3,10 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
-import axios from "axios";
-import * as admin from "firebase-admin";
 
 // Derive __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Initialize Firebase Admin
-// Note: In AI Studio, credentials should ideally be in env vars or a service account file
-// For this demo, we'll try to use the default app if possible or skip if not configured
-if (admin && admin.apps && admin.apps.length === 0) {
-  try {
-    // We assume the service account or default credentials are set up by the platform
-    // or we'll handle gracefully
-    admin.initializeApp();
-  } catch (e) {
-    console.warn("Firebase Admin failed to initialize. Server sync features might be limited.", e);
-  }
-}
-
-const db = (admin && admin.apps && admin.apps.length > 0) ? admin.firestore() : null;
 
 async function startServer() {
   const app = express();
@@ -31,6 +14,11 @@ async function startServer() {
 
   app.use(express.json());
   app.use(cookieParser());
+
+  // Health check for Cloud Run / Load Balancer
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
 
   // --- Vite / Production Serving ---
 

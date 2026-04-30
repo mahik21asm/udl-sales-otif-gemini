@@ -12,6 +12,13 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
+  // Reset insights when data is cleared
+  React.useEffect(() => {
+    if (!data?.kpis?.totalSales && insights) {
+      setInsights(null);
+    }
+  }, [data?.kpis?.totalSales]);
+
   const fetchInsights = async () => {
     setLoading(true);
     setError(false);
@@ -26,15 +33,15 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ data }) => {
   };
 
   return (
-    <div className="bg-card-bg dark:bg-card-bg-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgba(0,0,0,0.02)] overflow-hidden transition-all duration-300">
+    <div id="ai-insights" className="bg-card-bg dark:bg-card-bg-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgba(0,0,0,0.02)] overflow-hidden transition-all duration-300">
       <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-page-bg dark:bg-slate-800/30">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-primary-accent/10 dark:bg-primary-accent/20 rounded-lg text-primary-accent dark:text-primary-accent-dark">
             <Sparkles size={16} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-primary-text dark:text-primary-text-dark tracking-tight">AI Executive Summary</h3>
-            <p className="text-[9px] text-secondary-text dark:text-secondary-text-dark font-mono font-medium uppercase tracking-[0.1em] opacity-60 italic">Intelligence Layer: Gemini 1.5 Flash</p>
+            <h3 className="text-sm font-bold text-primary-text dark:text-primary-text-dark tracking-tight">AI Sales Analysis</h3>
+            <p className="text-[9px] text-secondary-text dark:text-secondary-text-dark font-mono font-medium uppercase tracking-[0.1em] opacity-60 italic">AI Powered Business Insights</p>
           </div>
         </div>
         
@@ -44,7 +51,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ data }) => {
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-accent hover:opacity-90 text-white text-[10px] font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-accent/20 dark:shadow-none uppercase tracking-wider"
         >
           {loading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
-          {insights ? 'Re-Sync Analysis' : 'Analyze Manufacturing Data'}
+          {insights ? 'Refresh Analysis' : 'Run AI Analysis'}
         </button>
       </div>
 
@@ -73,7 +80,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ data }) => {
               className="flex flex-col items-center justify-center py-12 text-center"
             >
               <Loader2 size={32} className="animate-spin text-primary-accent mb-4 opacity-50" />
-              <p className="text-xs font-mono font-bold text-slate-500 animate-pulse uppercase tracking-widest">Querying Neural Engine...</p>
+              <p className="text-xs font-mono font-bold text-slate-500 animate-pulse uppercase tracking-widest">Generating Insights...</p>
             </motion.div>
           ) : (
             <motion.div
@@ -90,8 +97,8 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ data }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <div className="flex items-center gap-2 mb-4 border-b border-slate-50 dark:border-slate-800 pb-2">
-                    <Lightbulb size={14} className="text-warning" />
-                    <h4 className="text-[10px] font-bold text-primary-text dark:text-primary-text-dark uppercase tracking-widest">Optimizations</h4>
+                    <TrendingUp size={14} className="text-emerald-500" />
+                    <h4 className="text-[10px] font-bold text-primary-text dark:text-primary-text-dark uppercase tracking-widest">Growth Opportunities</h4>
                   </div>
                   <ul className="space-y-4">
                     {insights.recommendations.map((rec, i) => (
@@ -106,7 +113,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ data }) => {
                 <div>
                   <div className="flex items-center gap-2 mb-4 border-b border-slate-50 dark:border-slate-800 pb-2">
                     <AlertTriangle size={14} className="text-danger" />
-                    <h4 className="text-[10px] font-bold text-primary-text dark:text-primary-text-dark uppercase tracking-widest">Anomaly Detection</h4>
+                    <h4 className="text-[10px] font-bold text-primary-text dark:text-primary-text-dark uppercase tracking-widest">Identified Risks</h4>
                   </div>
                   <div className="space-y-3">
                     {insights.risks.map((risk, i) => (

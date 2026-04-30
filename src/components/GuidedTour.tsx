@@ -56,6 +56,24 @@ const GuidedTour: React.FC = () => {
             } 
           },
           { 
+            element: '#ai-insights', 
+            popover: { 
+              title: 'AI Decision Layer', 
+              description: 'Run deep-learning analysis to find growth opportunities and risk clusters automagically using Gemini 1.5.', 
+              side: "top", 
+              align: 'center' 
+            } 
+          },
+          { 
+            element: '#gemini-chat-toggle', 
+            popover: { 
+              title: 'Natural Language Query', 
+              description: 'Ask questions like "Who are my top 5 customers in Nashik?" or "Analyze last week\'s OTIF drop" to get instant answers.', 
+              side: "left", 
+              align: 'center' 
+            } 
+          },
+          { 
             element: '#data-table', 
             popover: { 
               title: 'Detailed Sales Record', 

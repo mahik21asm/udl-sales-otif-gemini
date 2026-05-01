@@ -147,26 +147,49 @@ export const validateSalesData = (json: any[][]): ValidationResult => {
     
     try {
       if (bDate instanceof Date) {
-        // Use local component methods to avoid UTC shift
-        const y = bDate.getFullYear();
-        const m = String(bDate.getMonth() + 1).padStart(2, '0');
-        const d = String(bDate.getDate()).padStart(2, '0');
+        // Excel dates often come as UTC midnight. 
+        // If it's exactly at midnight UTC, use UTC components.
+        // Otherwise, use local components as it might be a user-created date.
+        const isMidnightUTC = bDate.getUTCHours() === 0 && bDate.getUTCMinutes() === 0;
+        const y = isMidnightUTC ? bDate.getUTCFullYear() : bDate.getFullYear();
+        const m = String((isMidnightUTC ? bDate.getUTCMonth() : bDate.getMonth()) + 1).padStart(2, '0');
+        const d = String(isMidnightUTC ? bDate.getUTCDate() : bDate.getDate()).padStart(2, '0');
         billingDateStr = `${y}-${m}-${d}`;
       } else if (typeof bDate === 'number') {
         const dt = XLSX.SSF.parse_date_code(bDate);
         billingDateStr = `${dt.y}-${String(dt.m).padStart(2, '0')}-${String(dt.d).padStart(2, '0')}`;
       } else if (bDate) {
-        // Try to parse string formats
-        const d = new Date(bDate);
-        if (isNaN(d.getTime())) throw new Error("Invalid format");
+        const dateStr = String(bDate).trim();
         
-        // If it looks like ISO (YYYY-MM-DD), it's UTC by default, 
-        // but for others it might be local. To be safe, we parse manually if possible
-        // or just use the local components if we have a valid date object.
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        billingDateStr = `${year}-${month}-${day}`;
+        // Handle DD-MM-YYYY or DD/MM/YYYY or DD.MM.YYYY
+        const dmyMatch = dateStr.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2,4})$/);
+        // Handle YYYYMMDD
+        const ymdRawMatch = dateStr.match(/^(\d{4})(\d{2})(\d{2})$/);
+        // Handle YYYY-MM-DD or YYYY/MM/DD
+        const ymdMatch = dateStr.match(/^(\d{4})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
+        
+        if (dmyMatch) {
+          let [_, day, month, year] = dmyMatch;
+          if (year.length === 2) year = '20' + year;
+          billingDateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        } else if (ymdRawMatch) {
+          let [_, year, month, day] = ymdRawMatch;
+          billingDateStr = `${year}-${month}-${day}`;
+        } else if (ymdMatch) {
+          let [_, year, month, day] = ymdMatch;
+          billingDateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        } else {
+          const d = new Date(dateStr);
+          if (isNaN(d.getTime())) throw new Error("Invalid format");
+          
+          // ISO strings (containing T or Z) are UTC.
+          // Most other formats (like "Apr 30, 2026") are parsed as Local.
+          const isISO = dateStr.includes('T') || dateStr.includes('Z') || /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
+          const year = isISO ? d.getUTCFullYear() : d.getFullYear();
+          const month = String((isISO ? d.getUTCMonth() : d.getMonth()) + 1).padStart(2, '0');
+          const day = String(isISO ? d.getUTCDate() : d.getDate()).padStart(2, '0');
+          billingDateStr = `${year}-${month}-${day}`;
+        }
       }
     } catch (e) {
       errors.push({ row: rowNum, column: 'Billing Date', message: 'Invalid date format.', value: bDate });

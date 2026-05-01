@@ -140,20 +140,20 @@ export function useDashboardData(
       // Safe limit to prevent infinite loops if something goes wrong with dates
       let safetyCount = 0;
       while (curr <= end && safetyCount < 366) {
-        // Manual key generation to avoid UTC shift
-        const y = curr.getFullYear();
-        const m = String(curr.getMonth() + 1).padStart(2, '0');
-        const d = String(curr.getDate()).padStart(2, '0');
+        // Manual key generation using UTC to match the records' billingDate format (YYYY-MM-DD)
+        const y = curr.getUTCFullYear();
+        const m = String(curr.getUTCMonth() + 1).padStart(2, '0');
+        const d = String(curr.getUTCDate()).padStart(2, '0');
         const dk = `${y}-${m}-${d}`;
         
-        const day = String(curr.getDate()).padStart(2, '0');
+        const day = String(curr.getUTCDate()).padStart(2, '0');
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const month = months[curr.getMonth()];
+        const month = months[curr.getUTCMonth()];
         const displayDate = `${day}-${month}`;
         
         if (!dailyMap[dk]) dailyMap[dk] = { d: displayDate, infa: 0, infb: 0, ts: curr.getTime() };
         
-        curr.setDate(curr.getDate() + 1);
+        curr.setUTCDate(curr.getUTCDate() + 1);
         safetyCount++;
       }
     }
@@ -165,9 +165,9 @@ export function useDashboardData(
         // If we haven't found this date in our range loop (odd case), add it
         const d = new Date(dk);
         if (!isNaN(d.getTime())) {
-          const day = String(d.getDate()).padStart(2, '0');
+          const day = String(d.getUTCDate()).padStart(2, '0');
           const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          const month = months[d.getMonth()];
+          const month = months[d.getUTCMonth()];
           dailyMap[dk] = { d: `${day}-${month}`, infa: 0, infb: 0, ts: d.getTime() };
         }
       }
